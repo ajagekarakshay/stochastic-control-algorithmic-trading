@@ -1,0 +1,4 @@
+build/
+tmp/
+*.pdf
+.DS_Store
