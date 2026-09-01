@@ -33,10 +33,25 @@ typst watch main.typ build/book.pdf
 The source is split by chapter under `chapters/`. References are maintained in
 BibLaTeX format in `references.bib`.
 
+## Execution interview Q&A
+
+The separate Typst project under `interview-qa/` converts the daily execution
+interview drills into navigable study chapters. Every chapter presents all
+questions first and detailed answers afterward. Each question links to its
+answer, and each answer links back to its question.
+
+Build the cumulative Q&A book and the current standalone chapter with:
+
+```bash
+make qa
+make qa-chapter-01
+```
+
+Generated PDFs remain under `build/` and are not committed.
+
 ## Current status
 
 The repository contains the full book architecture and first working drafts of
 the five-chapter execution-and-impact track. These are meant to be deepened
 progressively with derivations, empirical examples, exercises, and paper
 reproductions.
-
