@@ -4,6 +4,7 @@
 #import "chapters/03-transient-impact-resilience.typ": chapter-three
 #import "chapters/04-passive-aggressive-queues.typ": chapter-four
 #import "chapters/05-adaptive-policy-evaluation.typ": chapter-five
+#import "chapters/06-almgren-chriss-control.typ": chapter-six
 
 #show: qa-book.with(
   title: "Execution and Market Impact Interview Q&A",
@@ -19,3 +20,4 @@
 #chapter-three
 #chapter-four
 #chapter-five
+#chapter-six
