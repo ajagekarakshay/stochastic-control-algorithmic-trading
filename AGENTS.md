@@ -46,3 +46,16 @@ dependence. Distinguish prediction, causal estimation, and control.
 - Keep generated PDFs under `build/`; do not commit them.
 - Build the full book before committing changes.
 
+## Interview Q&A companion
+
+- Treat `interview-qa/` as a second, cumulative Typst book.
+- Chapters 01-05 are the fixed baseline adapted from the five historical
+  Execution Interview Drills. Do not overwrite, renumber, or regenerate them.
+- Determine each new chapter number from the largest existing numbered source;
+  the first newly generated daily chapter is Chapter 06.
+- Present all questions first and all detailed answers afterward.
+- Give every question a link to its answer and every answer a link back.
+- Add one `interview-qa/chapters/NN-*.typ` source, one matching standalone
+  `interview-qa/chapter-NN.typ`, and include it from `interview-qa/main.typ`.
+- Compile the cumulative PDF and the new standalone PDF, visually inspect both,
+  and verify internal PDF link annotations before committing.

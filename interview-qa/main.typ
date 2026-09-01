@@ -1,5 +1,9 @@
 #import "style.typ": qa-book
 #import "chapters/01-participation-impact.typ": chapter-one
+#import "chapters/02-time-of-day-liquidity.typ": chapter-two
+#import "chapters/03-transient-impact-resilience.typ": chapter-three
+#import "chapters/04-passive-aggressive-queues.typ": chapter-four
+#import "chapters/05-adaptive-policy-evaluation.typ": chapter-five
 
 #show: qa-book.with(
   title: "Execution and Market Impact Interview Q&A",
@@ -11,3 +15,7 @@
 #pagebreak()
 
 #chapter-one
+#chapter-two
+#chapter-three
+#chapter-four
+#chapter-five

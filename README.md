@@ -40,14 +40,26 @@ interview drills into navigable study chapters. Every chapter presents all
 questions first and detailed answers afterward. Each question links to its
 answer, and each answer links back to its question.
 
-Build the cumulative Q&A book and the current standalone chapter with:
+The first five chapters preserve the five completed historical drills:
+
+1. participation, impact, and causal interpretation;
+2. time of day, liquidity, and confounding;
+3. transient impact, resilience, and schedule shape;
+4. passive versus aggressive execution and queue risk; and
+5. adaptive versus static POV and policy evaluation.
+
+Build the cumulative Q&A book and all standalone chapters with:
 
 ```bash
 make qa
-make qa-chapter-01
+make qa-chapters
 ```
 
-Generated PDFs remain under `build/` and are not committed.
+To build one chapter, use a target such as `make qa-chapter-03`.
+
+Generated PDFs remain under `build/` and are not committed. New daily material
+must begin at Chapter 6 and continue from the largest chapter number already in
+the repository.
 
 ## Current status
 

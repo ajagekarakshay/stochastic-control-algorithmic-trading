@@ -1,4 +1,7 @@
-.PHONY: book qa qa-chapter-01 all watch clean
+QA_CHAPTER_SOURCES := $(wildcard interview-qa/chapter-*.typ)
+QA_CHAPTER_PDFS := $(patsubst interview-qa/chapter-%.typ,build/execution-interview-qa-chapter-%.pdf,$(QA_CHAPTER_SOURCES))
+
+.PHONY: book qa qa-chapters all watch clean
 
 book:
 	mkdir -p build
@@ -8,11 +11,15 @@ qa:
 	mkdir -p build
 	typst compile interview-qa/main.typ build/execution-interview-qa.pdf
 
-qa-chapter-01:
+build/execution-interview-qa-chapter-%.pdf: interview-qa/chapter-%.typ
 	mkdir -p build
-	typst compile interview-qa/chapter-01.typ build/execution-interview-qa-chapter-01.pdf
+	typst compile $< $@
 
-all: book qa qa-chapter-01
+qa-chapter-%: build/execution-interview-qa-chapter-%.pdf
+
+qa-chapters: $(QA_CHAPTER_PDFS)
+
+all: book qa qa-chapters
 
 watch:
 	mkdir -p build
