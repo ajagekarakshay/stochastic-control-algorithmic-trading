@@ -1,7 +1,7 @@
 #import "../style.typ": answer-link, back-link, candidate, interviewer, takeaway, warning
 
 #let chapter-five = [
-= Adaptive versus Static POV
+= Adaptive versus Static POV <qa-ch05>
 
 This chapter adapts Day 5 of the *Execution Interview Drill*. The original drill used twelve questions to compare an adaptive POV policy with a static POV baseline while probing benchmarks, selection, randomized experiments, interference, completion bias, predictive versus causal modeling, and off-policy evaluation.
 

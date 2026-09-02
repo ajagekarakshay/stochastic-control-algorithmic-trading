@@ -1,7 +1,7 @@
 #import "../style.typ": answer-link, back-link, candidate, interviewer, takeaway, warning
 
 #let chapter-four = [
-= Passive versus Aggressive Execution
+= Passive versus Aggressive Execution <qa-ch04>
 
 This chapter adapts Day 4 of the *Execution Interview Drill*: passive versus aggressive execution, queue position, adverse selection, and the hidden cost of apparently free liquidity. The drill tests whether you can value a limit order as a contingent execution rather than simply comparing maker and taker fees.
 

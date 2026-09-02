@@ -1,7 +1,7 @@
 #import "../style.typ": answer-link, back-link, candidate, interviewer, takeaway, warning
 
 #let chapter-two = [
-= Time of Day, Liquidity, and Confounding
+= Time of Day, Liquidity, and Confounding <qa-ch02>
 
 This chapter adapts Day 2 of the *Execution Interview Drill*. Its central puzzle is deliberately close to a real market-impact research problem: apparently lower slippage near the close, despite the intuition that concentrating an order late should be expensive. The drill tests whether you can distinguish volume from liquidity, diagnose selection effects, and convert a surprising empirical result into a defensible model change.
 

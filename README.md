@@ -16,6 +16,9 @@ The remaining roadmap extends the same lens to order placement, routing,
 market making, multi-asset execution, robust control, and reinforcement
 learning. See [`ROADMAP.md`](ROADMAP.md).
 
+The cumulative book includes a clickable chapter index, an Index link in each
+page header, and Previous / Index / Next navigation at every chapter boundary.
+
 ## Build
 
 Install [Typst](https://typst.app/open-source/), then run:
@@ -60,6 +63,11 @@ To build one chapter, use a target such as `make qa-chapter-03`.
 Generated PDFs remain under `build/` and are not committed. New daily material
 must begin at Chapter 6 and continue from the largest chapter number already in
 the repository.
+
+The cumulative Q&A PDF uses the same two-way navigation: its chapter index
+links into every chapter, each page links back to the index, and each chapter
+links to its neighbors. Standalone chapter PDFs intentionally omit
+cross-document navigation while preserving question-answer links.
 
 ## Current status
 

@@ -1,7 +1,7 @@
 #import "../style.typ": answer-link, back-link, candidate, interviewer, takeaway, warning
 
 #let chapter-one = [
-= Participation, Impact, and Causal Interpretation
+= Participation, Impact, and Causal Interpretation <qa-ch01>
 
 This chapter adapts the first *Execution Interview Drill* from the Prep project into a stand-alone study chapter. The original case and its interview sequence are preserved; wording has been lightly edited so the material reads coherently outside the chat. The questions appear first. Detailed answers and discussion begin in the second half, with links in both directions.
 

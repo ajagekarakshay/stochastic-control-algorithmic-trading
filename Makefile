@@ -1,4 +1,5 @@
 QA_CHAPTER_SOURCES := $(wildcard interview-qa/chapter-*.typ)
+QA_CONTENT_SOURCES := $(wildcard interview-qa/chapters/*.typ) interview-qa/style.typ
 QA_CHAPTER_PDFS := $(patsubst interview-qa/chapter-%.typ,build/execution-interview-qa-chapter-%.pdf,$(QA_CHAPTER_SOURCES))
 
 .PHONY: book qa qa-chapters all watch clean
@@ -11,7 +12,7 @@ qa:
 	mkdir -p build
 	typst compile interview-qa/main.typ build/execution-interview-qa.pdf
 
-build/execution-interview-qa-chapter-%.pdf: interview-qa/chapter-%.typ
+build/execution-interview-qa-chapter-%.pdf: interview-qa/chapter-%.typ $(QA_CONTENT_SOURCES)
 	mkdir -p build
 	typst compile $< $@
 

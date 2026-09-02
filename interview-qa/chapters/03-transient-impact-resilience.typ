@@ -1,7 +1,7 @@
 #import "../style.typ": answer-link, back-link, candidate, interviewer, takeaway, warning
 
 #let chapter-three = [
-= Transient Impact, Resilience, and Schedule Shape
+= Transient Impact, Resilience, and Schedule Shape <qa-ch03>
 
 This chapter adapts Day 3 of the *Execution Interview Drill*. The drill moves from static cost curves to path dependence: if a child order depletes liquidity and the market later replenishes, then the cost of the next child order depends on both its size and the recent trading path. The central interview skill is distinguishing mechanical decay from information, selection, and changing market state.
 

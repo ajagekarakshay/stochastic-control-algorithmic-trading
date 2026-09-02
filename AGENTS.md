@@ -42,6 +42,8 @@ dependence. Distinguish prediction, causal estimation, and control.
 ## Repository workflow
 
 - Keep each chapter in `chapters/` and include it from `main.typ`.
+- Give every main-book chapter a stable heading label, add it to the clickable
+  chapter index in `main.typ`, and maintain the Previous / Index / Next chain.
 - Add every cited source to `references.bib`.
 - Keep generated PDFs under `build/`; do not commit them.
 - Build the full book before committing changes.
@@ -57,5 +59,9 @@ dependence. Distinguish prediction, causal estimation, and control.
 - Give every question a link to its answer and every answer a link back.
 - Add one `interview-qa/chapters/NN-*.typ` source, one matching standalone
   `interview-qa/chapter-NN.typ`, and include it from `interview-qa/main.typ`.
+- Give the chapter heading a stable `<qa-chNN>` label. Update the clickable
+  chapter index and the Previous / Index / Next chain in
+  `interview-qa/main.typ`; the former last chapter must point forward to the
+  new chapter, and the new last chapter must point back.
 - Compile the cumulative PDF and the new standalone PDF, visually inspect both,
   and verify internal PDF link annotations before committing.

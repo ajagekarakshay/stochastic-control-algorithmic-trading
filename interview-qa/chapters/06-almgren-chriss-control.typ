@@ -1,7 +1,7 @@
 #import "../style.typ": answer-link, back-link, candidate, interviewer, takeaway, warning
 
 #let chapter-six = [
-= Almgren–Chriss: Risk, Impact, and the Execution Frontier
+= Almgren–Chriss: Risk, Impact, and the Execution Frontier <qa-ch06>
 
 The first five chapters established why execution cost is state-dependent, why benchmarks are not causal estimates, and why an adaptive policy must be evaluated as a policy. This chapter now builds the classical bridge from those ingredients to a control rule. Almgren–Chriss is deliberately simple, but it gives an unusually clear answer to the core interview question: *what economic force should make an execution accelerate or slow down?*
 

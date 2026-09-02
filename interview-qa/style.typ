@@ -27,7 +27,30 @@
 #let answer-link(target) = link(target)[Detailed answer #sym.arrow.r]
 #let back-link(target) = link(target)[#sym.arrow.l Back to question]
 
-#let qa-book(title: none, subtitle: none, author: none, body) = {
+#let chapter-nav(index-target, previous-target: none, next-target: none) = block(
+  width: 100%,
+  breakable: false,
+)[
+  #v(12pt)
+  #line(length: 100%, stroke: 0.5pt + rgb("c8cdd3"))
+  #v(5pt)
+  #grid(
+    columns: (1fr, auto, 1fr),
+    align(left)[
+      #if previous-target != none {
+        link(previous-target)[#sym.arrow.l Previous chapter]
+      }
+    ],
+    align(center)[#link(index-target)[Chapter index]],
+    align(right)[
+      #if next-target != none {
+        link(next-target)[Next chapter #sym.arrow.r]
+      }
+    ],
+  )
+]
+
+#let qa-book(title: none, subtitle: none, author: none, index-target: none, body) = {
   set document(title: title, author: author)
   set page(
     paper: "us-letter",
@@ -75,7 +98,16 @@
   pagebreak()
   set page(header: context {
     if counter(page).get().first() > 1 {
-      align(center, text(8pt, fill: gray)[#title])
+      grid(
+        columns: (1fr, auto, 1fr),
+        [],
+        align(center, text(8pt, fill: gray)[#title]),
+        align(right)[
+          #if index-target != none {
+            text(8pt)[#link(index-target)[Index]]
+          }
+        ],
+      )
       line(length: 100%, stroke: 0.4pt + rgb("c8cdd3"))
     }
   })
