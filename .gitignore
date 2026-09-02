@@ -1,4 +1,8 @@
 build/
 tmp/
 *.pdf
+!output/
+!output/pdf/
+!output/pdf/stochastic-control-algorithmic-trading.pdf
+!output/pdf/execution-interview-qa-chapter-*.pdf
 .DS_Store

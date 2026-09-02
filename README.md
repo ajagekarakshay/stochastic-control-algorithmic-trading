@@ -24,13 +24,13 @@ page header, and Previous / Index / Next navigation at every chapter boundary.
 Install [Typst](https://typst.app/open-source/), then run:
 
 ```bash
-typst compile main.typ build/book.pdf
+typst compile main.typ output/pdf/stochastic-control-algorithmic-trading.pdf
 ```
 
 For live rebuilding:
 
 ```bash
-typst watch main.typ build/book.pdf
+typst watch main.typ output/pdf/stochastic-control-algorithmic-trading.pdf
 ```
 
 The source is split by chapter under `chapters/`. References are maintained in
@@ -51,18 +51,20 @@ The first five chapters preserve the five completed historical drills:
 4. passive versus aggressive execution and queue risk; and
 5. adaptive versus static POV and policy evaluation.
 
-Build the cumulative Q&A book and all standalone chapters with:
+Build all standalone Q&A chapters with:
 
 ```bash
-make qa
 make qa-chapters
 ```
 
 To build one chapter, use a target such as `make qa-chapter-03`.
 
-Generated PDFs remain under `build/` and are not committed. New daily material
-must begin at Chapter 6 and continue from the largest chapter number already in
-the repository.
+Generated PDFs are stored under the root-level `output/pdf/` directory and are
+committed with their Typst sources. Running `make all` refreshes the main book
+and every standalone Q&A chapter PDF. The cumulative Q&A source remains useful
+for organization, but no cumulative Q&A PDF is generated or committed. New
+daily material must continue from the largest chapter number already in the
+repository.
 
 The cumulative Q&A PDF uses the same two-way navigation: its chapter index
 links into every chapter, each page links back to the index, and each chapter

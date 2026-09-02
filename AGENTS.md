@@ -45,8 +45,10 @@ dependence. Distinguish prediction, causal estimation, and control.
 - Give every main-book chapter a stable heading label, add it to the clickable
   chapter index in `main.typ`, and maintain the Previous / Index / Next chain.
 - Add every cited source to `references.bib`.
-- Keep generated PDFs under `build/`; do not commit them.
-- Build the full book before committing changes.
+- Keep generated PDFs under the root-level `output/pdf/` directory.
+- Build the main book and all standalone Q&A chapters, and commit every
+  generated PDF together with its source. Do not generate or commit a
+  cumulative Q&A PDF.
 
 ## Interview Q&A companion
 
@@ -63,5 +65,8 @@ dependence. Distinguish prediction, causal estimation, and control.
   chapter index and the Previous / Index / Next chain in
   `interview-qa/main.typ`; the former last chapter must point forward to the
   new chapter, and the new last chapter must point back.
-- Compile the cumulative PDF and the new standalone PDF, visually inspect both,
-  and verify internal PDF link annotations before committing.
+- Run `make all` so the main book and every standalone Q&A chapter are
+  regenerated under `output/pdf/`. Visually inspect the main book and the new
+  standalone PDF, verify internal PDF link annotations, and commit all changed
+  PDFs together with the Typst sources. Do not place a cumulative Q&A PDF in
+  `output/pdf/`.
