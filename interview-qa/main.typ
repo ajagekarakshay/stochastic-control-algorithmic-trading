@@ -5,6 +5,7 @@
 #import "chapters/04-passive-aggressive-queues.typ": chapter-four
 #import "chapters/05-adaptive-policy-evaluation.typ": chapter-five
 #import "chapters/06-almgren-chriss-control.typ": chapter-six
+#import "chapters/07-futures-roll-liquidity.typ": chapter-seven
 
 #show: qa-book.with(
   title: "Execution and Market Impact Interview Q&A",
@@ -24,6 +25,7 @@
 4. #link(<qa-ch04>)[Passive versus Aggressive Execution]
 5. #link(<qa-ch05>)[Adaptive versus Static POV]
 6. #link(<qa-ch06>)[Almgren-Chriss: Risk, Impact, and the Execution Frontier]
+7. #link(<qa-ch07>)[Futures Execution: Contract Choice, Rolls, and Liquidity Migration]
 
 #pagebreak()
 
@@ -43,4 +45,7 @@
 #chapter-nav(<qa-chapter-index>, previous-target: <qa-ch04>, next-target: <qa-ch06>)
 
 #chapter-six
-#chapter-nav(<qa-chapter-index>, previous-target: <qa-ch05>)
+#chapter-nav(<qa-chapter-index>, previous-target: <qa-ch05>, next-target: <qa-ch07>)
+
+#chapter-seven
+#chapter-nav(<qa-chapter-index>, previous-target: <qa-ch06>)
