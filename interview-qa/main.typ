@@ -6,6 +6,7 @@
 #import "chapters/05-adaptive-policy-evaluation.typ": chapter-five
 #import "chapters/06-almgren-chriss-control.typ": chapter-six
 #import "chapters/07-futures-roll-liquidity.typ": chapter-seven
+#import "chapters/08-adaptive-feedback-control.typ": chapter-eight
 
 #show: qa-book.with(
   title: "Execution and Market Impact Interview Q&A",
@@ -26,6 +27,7 @@
 5. #link(<qa-ch05>)[Adaptive versus Static POV]
 6. #link(<qa-ch06>)[Almgren-Chriss: Risk, Impact, and the Execution Frontier]
 7. #link(<qa-ch07>)[Futures Execution: Contract Choice, Rolls, and Liquidity Migration]
+8. #link(<qa-ch08>)[Adaptive Execution: Belief States, Feedback, and Receding-Horizon Control]
 
 #pagebreak()
 
@@ -48,4 +50,7 @@
 #chapter-nav(<qa-chapter-index>, previous-target: <qa-ch05>, next-target: <qa-ch07>)
 
 #chapter-seven
-#chapter-nav(<qa-chapter-index>, previous-target: <qa-ch06>)
+#chapter-nav(<qa-chapter-index>, previous-target: <qa-ch06>, next-target: <qa-ch08>)
+
+#chapter-eight
+#chapter-nav(<qa-chapter-index>, previous-target: <qa-ch07>)
