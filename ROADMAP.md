@@ -11,9 +11,10 @@ The book follows one recurring loop:
 
 ## Part I - Understanding the execution problem
 
-1. **The Execution Problem** - Parent and child orders, inventory, trading
-   rate, price risk, impact, opportunity cost, alpha decay, objectives,
-   constraints, benchmarks, and feedback policies.
+1. **The Execution Problem** - Parent and child orders, inventory dynamics,
+   market state and admissible policies, implementation shortfall, impact,
+   price risk, alpha decay, benchmarks, constraints, open-loop and feedback
+   policies, partial observation, dynamic programming, model risk, and units.
 2. **How Markets Absorb Orders** - Limit-order books, spread, depth, queues,
    order flow, adverse selection, hidden liquidity, resilience, fragmentation,
    auctions, and market clocks.

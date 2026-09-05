@@ -80,9 +80,9 @@ split and rewritten to match the approved structure.
   1,
   [The Execution Problem],
   [Frames execution as a decision problem in which inventory must be traded while prices, liquidity, and information continue to change.],
-  [Parent and child orders; inventory and trading rate; price risk; market impact; opportunity cost; alpha decay; static schedules and feedback policies; objectives, constraints, and benchmarks; prediction, estimation, and control.],
+  [Parent and child orders; inventory dynamics and trading rate; market state, information, and admissible policies; implementation shortfall and terminal completion; immediacy, impact, price risk, and alpha decay; benchmarks and constraints; open-loop schedules and feedback policies; partial observation; Bellman recursion and the HJB equation; prediction, causal response, and control; model risk, units, and normalization.],
   target: <ch-control-lens>,
-  status: [Working draft],
+  status: [First draft],
 )
 
 #roadmap-entry(
