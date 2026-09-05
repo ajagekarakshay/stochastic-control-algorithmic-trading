@@ -17,8 +17,9 @@
 1. #link(<ch-control-lens>)[Trading as Inference and Control]
 2. #link(<ch-microstructure>)[Market Microstructure as the Controlled System]
 3. #link(<ch-tca>)[Transaction Costs and Statistical Identification]
-4. #link(<ch-impact>)[Market-Impact Models and Estimation]
-5. #link(<ch-optimal-execution>)[Optimal Liquidation and Participation Control]
+4. #link(<ch-modeling-research>)[Statistical Modeling as a Research Process]
+5. #link(<ch-impact>)[Market-Impact Models and Estimation]
+6. #link(<ch-optimal-execution>)[Optimal Liquidation and Participation Control]
 
 #pagebreak()
 
@@ -29,10 +30,13 @@
 #chapter-nav(<book-chapter-index>, previous-target: <ch-control-lens>, next-target: <ch-tca>)
 
 #include "chapters/03-tca-identification.typ"
-#chapter-nav(<book-chapter-index>, previous-target: <ch-microstructure>, next-target: <ch-impact>)
+#chapter-nav(<book-chapter-index>, previous-target: <ch-microstructure>, next-target: <ch-modeling-research>)
+
+#include "chapters/03b-modeling-research.typ"
+#chapter-nav(<book-chapter-index>, previous-target: <ch-tca>, next-target: <ch-impact>)
 
 #include "chapters/04-impact-estimation.typ"
-#chapter-nav(<book-chapter-index>, previous-target: <ch-tca>, next-target: <ch-optimal-execution>)
+#chapter-nav(<book-chapter-index>, previous-target: <ch-modeling-research>, next-target: <ch-optimal-execution>)
 
 #include "chapters/05-optimal-execution.typ"
 #chapter-nav(<book-chapter-index>, previous-target: <ch-impact>)
