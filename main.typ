@@ -14,12 +14,7 @@
 
 #heading(level: 1, numbering: none, outlined: false)[Chapter Index] <book-chapter-index>
 
-1. #link(<ch-control-lens>)[Trading as Inference and Control]
-2. #link(<ch-microstructure>)[Market Microstructure as the Controlled System]
-3. #link(<ch-tca>)[Transaction Costs and Statistical Identification]
-4. #link(<ch-modeling-research>)[Statistical Modeling as a Research Process]
-5. #link(<ch-impact>)[Market-Impact Models and Estimation]
-6. #link(<ch-optimal-execution>)[Optimal Liquidation and Participation Control]
+#include "chapters/00-book-skeleton.typ"
 
 #pagebreak()
 

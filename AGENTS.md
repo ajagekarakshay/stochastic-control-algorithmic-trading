@@ -6,6 +6,25 @@ This repository is a book, not a collection of disconnected notes. Every
 chapter should connect a market phenomenon, a statistical model, and a control
 decision.
 
+The authoritative 25-chapter architecture is maintained in
+`chapters/00-book-skeleton.typ`. Discuss and agree on a chapter's purpose and
+subtopics before replacing its skeleton with prose. Develop the main book one
+chapter at a time; do not generate several planned chapters in a single pass.
+
+## Writing voice
+
+- Write for a mathematically mature human reader, not for another AI or as an
+  instruction manual for one.
+- Prefer connected explanatory prose to compressed lists of declarations.
+- Be descriptive without becoming pedantic. Introduce formalism when it makes
+  an economic or statistical idea more precise.
+- Begin important sections with the market or research problem that motivates
+  them. Return to what the result changes for modeling or trading.
+- Avoid formulaic transitions, repeated summary boxes, canned “key takeaway”
+  language, and claims of importance that have not been demonstrated.
+- Treat existing main-book chapters as working drafts until they have been
+  reviewed against the approved skeleton.
+
 ## Exposition order
 
 For each important concept, use this order whenever possible:
@@ -42,6 +61,8 @@ dependence. Distinguish prediction, causal estimation, and control.
 ## Repository workflow
 
 - Keep each chapter in `chapters/` and include it from `main.typ`.
+- Keep the detailed chapter index in `chapters/00-book-skeleton.typ` aligned
+  with `ROADMAP.md`. Link entries only to material that exists.
 - Give every main-book chapter a stable heading label, add it to the clickable
   chapter index in `main.typ`, and maintain the Previous / Index / Next chain.
 - Add every cited source to `references.bib`.

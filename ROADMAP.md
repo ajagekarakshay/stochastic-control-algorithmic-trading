@@ -1,121 +1,125 @@
 # Book roadmap
 
-The book is organized around a loop:
+The authoritative, detailed chapter skeleton is part of the Typst manuscript
+in `chapters/00-book-skeleton.typ`. It records each chapter's purpose,
+subtopics, writing status, and links to material that already exists.
 
-> observe market state → estimate dynamics and costs → choose an action →
-> observe fills and market response → update beliefs and policy.
+The book follows one recurring loop:
 
-## Part I — Execution and market impact (first priority)
+> observe market state -> estimate dynamics and costs -> choose an action ->
+> observe fills and market response -> update beliefs and policy.
 
-1. **Trading as inference and control**  
-   State, action, disturbance, objective, filtration, Bellman recursion, and the
-   prediction-versus-control distinction.
+## Part I - Understanding the execution problem
 
-2. **Market microstructure as the controlled system**  
-   Limit-order books, spread, depth, queueing, order flow, adverse selection,
-   resilience, fragmentation, auctions, and clocks.
+1. **The Execution Problem** - Parent and child orders, inventory, trading
+   rate, price risk, impact, opportunity cost, alpha decay, objectives,
+   constraints, benchmarks, and feedback policies.
+2. **How Markets Absorb Orders** - Limit-order books, spread, depth, queues,
+   order flow, adverse selection, hidden liquidity, resilience, fragmentation,
+   auctions, and market clocks.
+3. **What Does an Execution Cost?** - Arrival shortfall, VWAP, TWAP, close and
+   interval benchmarks, spread cost, timing risk, impact, markouts, partial
+   fills, opportunity cost, counterfactuals, and TCA.
 
-3. **Transaction costs and statistical identification**  
-   Arrival shortfall, VWAP, reversion, opportunity cost, decomposition,
-   counterfactuals, dependence, A/B tests, causal pitfalls, and uncertainty.
+## Part II - Learning from execution data
 
-4. **Market-impact models and estimation**  
-   Temporary/permanent and transient impact, concavity, square-root and
-   propagator laws, nonlinear constrained regression, hierarchical shrinkage,
-   endogeneity, metaorder reconstruction, diagnostics, and ML extensions.
+4. **Statistical Modeling as a Research Process** - Research questions,
+   estimands, data-generating stories, prediction versus causality and control,
+   data contracts, label noise, features, validation, bias and variance,
+   residuals, uncertainty, distribution shift, and decision-aware evaluation.
+5. **Execution Data: From Market Events to Research Tables** - Orders, fills,
+   quotes, trades, depth, event alignment, timestamps, parent-order
+   reconstruction, missingness, censoring, corrections, rolls, and
+   leakage-safe joins.
+6. **The Empirical Shape of Market Impact** - Temporary, permanent, and
+   transient impact, size, participation, duration, concavity, square-root
+   behavior, impact paths, decay, liquidity dependence, and regimes.
+7. **Estimating Market Impact** - Parametric and nonparametric models,
+   nonlinear estimation, heteroskedasticity, hierarchical shrinkage,
+   endogeneity, confounding, selection, uncertainty, diagnostics, and policy
+   sensitivity.
+8. **Modeling the State of Liquidity** - Volume, spread, volatility, depth,
+   imbalance, point processes, latent state, regimes, probabilistic forecasts,
+   calibration, scenarios, and drift.
 
-5. **Optimal liquidation and participation control**  
-   Bertsimas–Lo and Almgren–Chriss, the efficient frontier, alpha decay,
-   volume time, POV schedules, constraints, sensitivity, and receding-horizon
-   control.
+## Part III - From estimated models to execution policies
 
-## Part II — Adaptive execution and order placement
+9. **Classical Optimal Liquidation** - Inventory dynamics, Bertsimas-Lo,
+   Almgren-Chriss, temporary impact, price risk, the execution frontier,
+   urgency, calibration, and limiting cases.
+10. **Volume Time, VWAP, and Participation Strategies** - Volume time, TWAP,
+    VWAP, POV, uncertain volume, participation constraints, completion,
+    catch-up behavior, and alpha decay.
+11. **Transient Impact and Market Resilience** - Propagator models, decay
+    kernels, path dependence, resilience, kernel estimation, child-order
+    spacing, manipulation, and optimal schedules.
+12. **Adaptive Execution** - Feedback, belief updates, Bayesian learning,
+    model-predictive control, robustness, dual control, stability, hysteresis,
+    guardrails, and the value of adaptation.
+13. **Passive Execution and Queue Control** - Posting versus crossing, queue
+    position, fills, cancellations, adverse selection, markouts, hazard models,
+    non-fill risk, and impulse control.
+14. **Routing, Dark Liquidity, and Auctions** - Venues, fees, rebates, latency,
+    toxicity, dark pools, leakage, bandits, routing constraints, auctions, and
+    joint schedule and venue control.
+15. **Futures Execution** - Exposure-aware size, contract liquidity, rolls,
+    basis risk, calendar spreads, continuous-series distortions, sessions,
+    expiry effects, roll-aware impact, and contract choice.
 
-6. **Stochastic liquidity, volume, spread, and volatility**  
-   State-space and point-process models; volume-curve estimation; forecast
-   uncertainty; regime changes; scenario generation.
+## Part IV - Determining whether a policy works
 
-7. **Transient impact and market resilience**  
-   Propagator states, no-dynamic-arbitrage conditions, optimal schedules under
-   decay, price manipulation, and empirical kernel estimation.
+16. **Experiments and Policy Evaluation** - Randomization, A/B tests,
+    switchbacks, stratification, interference, completion bias, overlap,
+    counterfactual policy values, doubly robust methods, uncertainty, and
+    rollout.
+17. **Reinforcement Learning for Execution** - MDPs and POMDPs, state and
+    reward design, simulators, offline RL, off-policy evaluation, distribution
+    shift, conservative improvement, and safety.
 
-8. **Limit-order placement and queue control**  
-   Fill probabilities, queue position, cancellation, adverse selection,
-   survival models, marked point processes, and impulse control.
+## Part V - Other trading problems through the control lens
 
-9. **Smart order routing and venue choice**  
-   Fragmented liquidity, fees and rebates, latency, fill quality, dark pools,
-   crossing, auctions, bandits, and constrained routing.
+18. **Market Making and Inventory Control** - Reservation prices, quote skew,
+    Avellaneda-Stoikov, inventory risk, order arrivals, fills, adverse
+    selection, queues, and multi-asset inventory.
+19. **Multi-Asset and Portfolio Execution** - Basket risk, covariance, factors,
+    factor liquidity, cross-impact, coupled schedules, hedging, rebalances,
+    transitions, and manipulation-free models.
+20. **Portfolio Choice with Trading Frictions** - Signals, turnover,
+    transaction costs, decay, no-trade regions, dynamic rebalancing, robust
+    portfolios, and execution-aware construction.
+21. **Optimal Stopping and Statistical Arbitrage** - Continuation value,
+    stopping times, free boundaries, mean reversion, regimes, sequential
+    testing, transaction costs, delayed execution, and signal decay.
+22. **Options Hedging under Frictions** - Delta and gamma risk, discrete
+    hedging, stochastic volatility, transaction costs, impact-aware
+    rebalancing, no-trade regions, jumps, and joint hedge-execution decisions.
+23. **Strategic Traders and Stochastic Games** - Signaling, strategic
+    liquidation, predatory trading, equilibrium impact, best responses,
+    stochastic and mean-field games, and mechanism design.
 
-10. **Bayesian, robust, and model-predictive execution**  
-    Online learning, uncertainty sets, distributional robustness, dual control,
-    and rolling re-optimization.
+## Part VI - Conducting execution research
 
-11. **Machine learning for execution decisions**  
-    Supervised prediction, calibration, ranking, representation learning,
-    uncertainty quantification, drift monitoring, and policy-aware losses.
+24. **From Research Question to Production Model** - Baselines, exploratory
+    analysis, validation, reproducibility, versioning, leakage controls, stress
+    tests, policy translation, model-engine interfaces, monitoring,
+    governance, rollback, and communication.
+25. **Worked Research Studies** - Equity impact, time-of-day effects,
+    transient decay, adaptive POV, passive fills, futures rolls,
+    Almgren-Chriss, propagator models, and learned-policy evaluation.
 
-12. **Reinforcement learning and offline policy evaluation**  
-    MDPs/POMDPs, simulators, offline RL, off-policy evaluation, safe policy
-    improvement, and why naive backtests fail.
+## Appendices
 
-## Part III — Other trading problems through the same lens
+A. Probability and conditional expectation
+B. Martingales, stopping times, and change of measure
+C. Brownian motion, Itô calculus, and jump processes
+D. Dynamic programming, HJB equations, and verification
+E. Convex optimization, KKT conditions, and numerical control
+F. Statistical inference, regularization, and causal estimation
+G. Time-series and event-data methods
+H. Notation, units, and dimensional analysis
 
-13. **Market making and inventory control**  
-    Reservation prices, Avellaneda–Stoikov, order-flow calibration, queue risk,
-    inventory penalties, and multi-asset extensions.
+## Writing order
 
-14. **Optimal stopping and statistical arbitrage**  
-    Entry/exit, free-boundary problems, pairs and spread models, regime
-    uncertainty, and costs.
-
-15. **Portfolio choice with trading frictions**  
-    Dynamic mean–variance ideas, stochastic control with transaction costs,
-    no-trade regions, and signal decay.
-
-16. **Multi-asset and portfolio execution**  
-    Cross-impact, covariance, factor liquidity, coupled schedules, basket risk,
-    and manipulation-free models.
-
-17. **Options hedging and execution under frictions**  
-    Discrete hedging, inventory and gamma risk, impact-aware rebalancing, and
-    stochastic volatility.
-
-18. **Auctions, liquidation, and special trading mechanisms**  
-    Opening/closing auctions, benchmarks, imbalances, fire sales, and strategic
-    interaction.
-
-19. **Strategic agents and stochastic games**  
-    Signaling, predatory trading, mean-field games, equilibrium impact, and
-    mechanism design.
-
-## Part IV — Research practice and foundations
-
-20. **From research question to production model**  
-    Data contracts, reproducible experiments, leakage controls, simulation,
-    validation, monitoring, governance, and model–engine interfaces.
-
-21. **Case studies and paper reproductions**  
-    Almgren–Chriss, propagator impact, volume uncertainty, fill modeling,
-    market making, and offline RL.
-
-22. **Interview research drills**  
-    Open-ended investigations, model criticism, experimental design, numerical
-    problems, and concise communication.
-
-### Appendices
-
-A. Probability, conditional expectation, martingales, and stopping times  
-B. Brownian motion, Itô calculus, jump processes, and point processes  
-C. Dynamic programming, HJB, verification, and maximum principles  
-D. Convex optimization, KKT systems, numerical methods, and MPC  
-E. Statistical inference, regularization, causal inference, and ML  
-F. Time-series data engineering, event studies, and reproducible computation  
-G. Notation and dimensional-analysis reference
-
-## Progressive writing order
-
-The recommended order is 1 → 2 → 3 → 4 → 5 → 7 → 6 → 8 → 10 → 11 → 12.
-This puts the highest-value execution interview material first while preserving
-the dependency chain from mechanism to measurement to estimation to control.
-
+The main book is developed one chapter at a time. Part I comes first:
+Chapter 1, then Chapter 2, then Chapter 3. Each chapter is discussed against
+the skeleton before its working draft is rewritten.

@@ -79,7 +79,7 @@ cannot quietly appear as a pre-trade feature. Child fills cannot be treated as
 independent orders. A model that predicts only the unconditional average is not
 enough if the optimizer needs state-dependent marginal costs.
 
-#definition[
+#definition("estimand and estimator")[
   The *estimand* is the population quantity we want to learn. The *estimator* is
   the rule we apply to data to estimate it. A machine-learning model is often
   part of the estimator; it is not the estimand itself.

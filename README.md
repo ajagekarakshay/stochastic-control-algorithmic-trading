@@ -16,8 +16,9 @@ The remaining roadmap extends the same lens to order placement, routing,
 market making, multi-asset execution, robust control, and reinforcement
 learning. See [`ROADMAP.md`](ROADMAP.md).
 
-The cumulative book includes a clickable chapter index, an Index link in each
-page header, and Previous / Index / Next navigation at every chapter boundary.
+The book begins with a detailed 25-chapter skeleton that records each chapter's
+purpose and planned subtopics. Existing material is linked from that index, and
+every content page includes an Index link for returning to it.
 
 ## Build
 
@@ -73,7 +74,6 @@ cross-document navigation while preserving question-answer links.
 
 ## Current status
 
-The repository contains the full book architecture and first working drafts of
-the five-chapter execution-and-impact track. These are meant to be deepened
-progressively with derivations, empirical examples, exercises, and paper
-reproductions.
+The repository contains the approved 25-chapter architecture and six working
+main-book drafts. Chapters are reviewed and rewritten one at a time, beginning
+with Part I, rather than generated in bulk.
