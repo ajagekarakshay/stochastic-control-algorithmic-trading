@@ -48,6 +48,10 @@ dependence. Distinguish prediction, causal estimation, and control.
   empirical regularity.
 - Test limiting cases and dimensions after major derivations.
 - Use consistent notation from `notation.typ`.
+- In Typst math, insert a space before function arguments when the function has
+  a subscript or superscript: write `$V_k (z)$`, not `$V_k(z)$`. Without the
+  space, Typst can absorb the argument into the subscript. Use explicit scalable
+  delimiters such as `$E lr([X])$` for expectations.
 
 ## Empirical standard
 

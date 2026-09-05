@@ -90,7 +90,7 @@ interval. With a passive order, the algorithm chooses a submitted size and
 price, while the resulting fill is random. Inventory then evolves as
 
 $
-  X_(k+1) = X_k - F_(k+1)(u_k),
+  X_(k+1) = X_k - F_(k+1) (u_k),
 $
 
 where $u_k$ is the order-placement decision and $F_(k+1)$ is the fill produced
@@ -182,7 +182,7 @@ algorithm's earlier actions, and fills received by that time. A valid policy
 has the form
 
 $
-  u_k = pi_k(cal(F)_k).
+  u_k = pi_k (cal(F)_k).
 $
 
 It cannot use the closing volume, the next quote, or a corrected market-data
@@ -218,7 +218,7 @@ stated because “ten basis points of cost” is otherwise incomplete.
 For a marketable buy order, it is useful to write the execution price as
 
 $
-  P_k = m_k + s_k/2 + h_k(x_k; L_k),
+  P_k = m_k + s_k/2 + h_k (x_k; L_k),
 $
 
 where $L_k$ denotes the liquidity state and $h_k$ is the additional price
@@ -241,13 +241,13 @@ the horizon:
 $
   C_"reported"
   =
-  sum_(k=0)^(N-1) x_k(P_k-m_0)
-  + X_N(m_N-m_0).
+  sum_(k=0)^(N-1) x_k (P_k - m_0)
+  + X_N (m_N - m_0).
 $
 
 That expression measures the price movement on what was not bought, but it
 does not by itself make completion desirable. A control objective therefore
-needs either the hard condition $X_N=0$ or a terminal penalty $Phi(X_N)$ that
+needs either the hard condition $X_N=0$ or a terminal penalty $Phi (X_N)$ that
 represents the economic cost of leaving the instruction unfinished. Without
 one of them, “do not trade” can become an apparently optimal solution.
 
@@ -258,7 +258,7 @@ simple model. Suppose the spread is constant, there is no alpha or price risk,
 and temporary impact per share is linear in the trading rate:
 
 $
-  h(v_t) = eta v_t,
+  h (v_t) = eta v_t,
   quad eta > 0.
 $
 
@@ -311,7 +311,7 @@ $
 For a completed buy order, integration by parts gives
 
 $
-  integral_0^T v_t(m_t-m_0) dif t
+  integral_0^T v_t (m_t - m_0) dif t
   =
   integral_0^T X_t dif m_t.
 $
@@ -321,13 +321,13 @@ bought, it remains exposed to future price movement. Conditional on current
 information, the expected contribution is approximately
 
 $
-  E[integral_0^T X_t mu_t dif t],
+  E lr([integral_0^T X_t mu_t dif t]),
 $
 
 and the variance of the diffusion contribution is governed by
 
 $
-  E[integral_0^T X_t^2 sigma_t^2 dif t].
+  E lr([integral_0^T X_t^2 sigma_t^2 dif t]).
 $
 
 For a buy order, positive expected drift makes delay expensive and encourages
@@ -343,16 +343,16 @@ larger signal expected to persist for several hours.
 A common local objective combines these considerations:
 
 $
-  J(pi)
+  J (pi)
   =
-  E^pi(
+  E^pi lr([
     integral_0^T (
-      v_t(s_t/2 + h(v_t,L_t))
+      v_t (s_t/2 + h (v_t, L_t))
       + X_t mu_t
       + lambda/2 sigma_t^2 X_t^2
     ) dif t
-    + Phi(X_T)
-  ).
+    + Phi (X_T)
+  ]).
 $
 
 The first term pays for liquidity, the second represents expected delay cost,
@@ -422,7 +422,7 @@ ten percent of quantity in each of ten buckets. A *feedback policy* specifies
 what to do as a function of information observed during the order:
 
 $
-  u_k = pi_k(X_k, tau_k, "market observations", "current forecasts").
+  u_k = pi_k (X_k, tau_k, "market observations", "current forecasts").
 $
 
 The difference becomes clear when the morning changes.
@@ -457,9 +457,9 @@ inferred rather than observed.
 It is useful to distinguish the latent state $Z_k$ from observations $Y_k$:
 
 $
-  Z_(k+1) = F(Z_k,u_k,epsilon_(k+1)),
+  Z_(k+1) = F (Z_k, u_k, epsilon_(k+1)),
   quad
-  Y_k = H(Z_k,eta_k).
+  Y_k = H (Z_k, eta_k).
 $
 
 The first equation describes how the market and inventory evolve under the
@@ -467,7 +467,7 @@ action. The second describes what the algorithm gets to see. If $Y_k$ is not a
 sufficient state, the controller can maintain a belief
 
 $
-  b_k(z) = P(Z_k=z | cal(F)_k).
+  b_k (z) = P (Z_k = z | cal(F)_k).
 $
 
 A belief is simply an explicit representation of uncertainty about the current
@@ -482,20 +482,20 @@ that uncertainty is large enough to change the action.
 
 == Bellman's principle in execution language
 
-Let $V_k(z)$ denote the minimum expected cost from time $k$ onward when the
-current state is $z$. If $cal(U)_k(z)$ is the set of feasible actions, then
+Let $V_k (z)$ denote the minimum expected cost from time $k$ onward when the
+current state is $z$. If $cal(U)_k (z)$ is the set of feasible actions, then
 
 $
-  V_k(z)
+  V_k (z)
   =
-  min_(u in cal(U)_k(z)) (
-    c_k(z,u)
-    + E( V_(k+1)(Z_(k+1)) | Z_k=z, u_k=u )
+  min_(u in cal(U)_k (z)) (
+    c_k (z, u)
+    + E lr([V_(k+1) (Z_(k+1)) | Z_k = z, u_k = u])
   ).
 $
 
 The expectation averages over the possible next states after taking action $u$
-from state $z$. The terminal value is $V_N(z)=Phi(z)$. In words, the algorithm
+from state $z$. The terminal value is $V_N (z)=Phi (z)$. In words, the algorithm
 compares the cost paid by acting now with the expected future cost of the state
 that action leaves behind. A large aggressive child order may be expensive
 immediately but reduce future inventory. A passive order may have a favorable
@@ -513,7 +513,7 @@ The continuous-time version leads to a Hamilton-Jacobi-Bellman equation. For a
 controlled diffusion
 
 $
-  dif Z_t = b(Z_t,u_t) dif t + Sigma(Z_t,u_t) dif W_t,
+  dif Z_t = b (Z_t, u_t) dif t + Sigma (Z_t, u_t) dif W_t,
 $
 
 the value function formally satisfies
@@ -524,9 +524,9 @@ $
   partial_t V
   +
   min_u {
-    c(z,u)
-    + nabla V^T b(z,u)
-    + 1/2 "tr"(Sigma Sigma^T nabla^2 V)
+    c (z, u)
+    + nabla V^T b (z, u)
+    + 1/2 "tr" (Sigma Sigma^T nabla^2 V)
   }.
 $
 
@@ -546,9 +546,9 @@ target has changed.
   stroke: 0.5pt + rgb("d9dde2"),
   fill: (x, y) => if y == 0 { rgb("eef5fb") },
   [*Question*], [*Quantity of interest*], [*Execution example*],
-  [Prediction], [$E[Y | X=x]$ under the observed data-generating policy], [What slippage should we expect for an order with these characteristics?],
-  [Causal response], [$E[Y(u)-Y(u')]$ under an intervention], [How would cost change if participation rose from ten to twenty percent?],
-  [Control], [$arg min_pi E[C^pi]$ subject to constraints], [Which sequence of actions should the algorithm take as the order and market evolve?],
+  [Prediction], [$E lr([Y | X=x])$ under the observed data-generating policy], [What slippage should we expect for an order with these characteristics?],
+  [Causal response], [$E lr([Y (u)-Y (u')])$ under an intervention], [How would cost change if participation rose from ten to twenty percent?],
+  [Control], [$arg min_pi E lr([C^pi])$ subject to constraints], [Which sequence of actions should the algorithm take as the order and market evolve?],
 )
 
 These questions can use some of the same data, but they do not require the same
@@ -611,11 +611,11 @@ better understood.
 
 Dimensional analysis is an inexpensive defense against confused models.
 Suppose $v$ is measured in shares per minute and the per-share temporary impact
-is $h(v)=eta v$ dollars per share. Then $eta$ has units
+is $h (v)=eta v$ dollars per share. Then $eta$ has units
 dollars times minutes per share squared. The cost rate
 
 $
-  v h(v) = eta v^2
+  v h (v) = eta v^2
 $
 
 has units dollars per minute, and its integral has units dollars.
