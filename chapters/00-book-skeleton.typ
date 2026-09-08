@@ -89,9 +89,9 @@ split and rewritten to match the approved structure.
   2,
   [How Markets Absorb Orders],
   [Builds an economic picture of the trading venue before reducing liquidity to a handful of model inputs.],
-  [The bid, ask, spread, and depth; market and limit orders; price-time priority; queue position; order flow; adverse selection; hidden liquidity; cancellations; replenishment and resilience; fragmentation; dark pools; auctions; clock time, event time, and volume time.],
+  [The bid, ask, spread, and depth; marketable and resting limit orders; price-time priority and queue position; book-walking cost; spread capture and adverse selection; fill and non-fill value; trade and order-flow imbalance; microprice; mechanical, informational, and common-cause price response; hidden liquidity and cancellations; replenishment and resilience; liquidity across horizons; calendar, event, and volume time; intraday seasonality; fragmentation and routing; dark liquidity; auctions; translating mechanism into control state.],
   target: <ch-microstructure>,
-  status: [Working draft],
+  status: [First draft],
 )
 
 #roadmap-entry(

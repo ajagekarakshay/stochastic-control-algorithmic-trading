@@ -15,9 +15,10 @@ The book follows one recurring loop:
    market state and admissible policies, implementation shortfall, impact,
    price risk, alpha decay, benchmarks, constraints, open-loop and feedback
    policies, partial observation, dynamic programming, model risk, and units.
-2. **How Markets Absorb Orders** - Limit-order books, spread, depth, queues,
-   order flow, adverse selection, hidden liquidity, resilience, fragmentation,
-   auctions, and market clocks.
+2. **How Markets Absorb Orders** - Limit-order books, price-time priority,
+   queues, book-walking cost, spread capture, fill and non-fill value, order
+   flow, microprice, adverse selection, hidden liquidity, resilience, market
+   clocks, seasonality, routing, dark liquidity, and auctions.
 3. **What Does an Execution Cost?** - Arrival shortfall, VWAP, TWAP, close and
    interval benchmarks, spread cost, timing risk, impact, markouts, partial
    fills, opportunity cost, counterfactuals, and TCA.

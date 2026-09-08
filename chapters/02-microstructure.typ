@@ -1,272 +1,725 @@
 #import "../style.typ": intuition, interview, research, takeaway, definition
 
-= Market Microstructure as the Controlled System <ch-microstructure>
+= How Markets Absorb Orders <ch-microstructure>
 
-An execution model controls neither an abstract Brownian motion nor a daily
-return. It submits orders into a trading mechanism. The mechanism determines
-priority, fills, spread capture, information leakage, and how quickly liquidity
-recovers. Microstructure supplies the causal stories behind the state variables
-and cost functions of Chapter 1.
+At 10:07, the buy order introduced in Chapter 1 still has 368,000 shares left.
+The execution algorithm is ready to send its next child order. The best offer
+shows 8,000 shares at \$50.02. Another 19,000 shares are displayed one cent
+higher. The spread is one cent, recent trades have mostly been buys, and the
+offer has repeatedly refilled after being hit.
 
-== The limit-order book
+Should the algorithm buy 20,000 shares immediately? Post at the bid? Take the
+8,000 shares at the best offer and wait? Route part of the order to a dark pool?
+The parent-order objective alone cannot answer these questions. The answer
+depends on the mechanism through which orders meet, acquire priority, execute,
+and alter what other participants do next.
 
-At time $t$, let the best bid and ask be $b_t$ and $a_t$. Define
+Market microstructure is the study of that mechanism. For execution, its role
+is practical: it explains where spread cost, fill uncertainty, adverse
+selection, information leakage, and short-lived impact come from. A cost curve
+or fill model is useful only when it preserves enough of this mechanism to
+compare the actions actually available to the algorithm.
 
-$
-  m_t = (a_t+b_t)/2, quad s_t = a_t-b_t.
-$
+== The order book is a set of standing intentions
 
-A limit order supplies liquidity at a specified price; a marketable order
-demands liquidity and trades against resting orders. Price-time priority usually
-means better prices execute first and, at the same price, earlier orders execute
-first. Amendments may lose queue priority.
-
-The displayed book is a schedule of marginal liquidity, not a promise that all
-depth remains available. A market order of size $q$ walks the ask until its
-quantity is filled. If $A_t(p)$ is cumulative displayed ask depth through price
-$p$, the mechanical book cost relative to the mid is
-
-$
-  C_t(q) = integral_0^q (P_t^"ask"(x)-m_t) dif x,
-$
-
-where $P_t^"ask"(x)$ is the marginal ask price at cumulative quantity $x$.
-This is an *instantaneous* snapshot cost. It is not the same as the realized
-impact of an algorithm spread through time.
-
-#intuition[
-  Depth is a stock; volume is a flow. A book can look thin but replenish rapidly,
-  or look deep and vanish when touched. Execution capacity depends on both the
-  visible stock and the dynamics of replenishment.
-]
-
-== Spread is compensation, state, and cost
-
-The bid–ask spread compensates liquidity suppliers for several components:
-
-- order-processing and venue costs;
-- inventory risk while holding an unwanted position;
-- adverse selection against better-informed or faster traders; and
-- option value granted to a resting order while the market moves.
-
-For an aggressive buy at the ask, the immediate mid-relative cost begins near
-$s_t/2$, before fees and impact. A passive buy may appear to earn $s_t/2$, but
-the fill is selected: it is more likely when sell pressure arrives or the fair
-price is moving down. Spread capture must therefore be evaluated after a
-suitable markout horizon and with non-fills included.
-
-#definition("effective and realized spread")[
-  For a trade at price $P_t$ with sign $epsilon_t in {-1,+1}$, the effective
-  spread is $2 epsilon_t(P_t-m_t)$. A realized-spread measure replaces the
-  contemporaneous mid with a future mid $m_(t+tau)$:
-  $2 epsilon_t(P_t-m_(t+tau))$. Their difference is a markout or adverse-
-  selection component, conditional on the chosen horizon $tau$.
-]
-
-== Order flow and price formation
-
-Trade signs are persistent: large investors split orders, and correlated agents
-may act on related information. Yet returns are much less predictable than raw
-sign persistence suggests. Liquidity must adapt. The market may provide less
-depth, widen spreads, or adjust prices more strongly when order flow is
-surprising; predictable flow can have smaller marginal response.
-
-A simple signed-flow model is
+Consider a continuous limit-order market. At time $t$, let $b_t$ be the best
+bid and $a_t$ the best ask, with $b_t < a_t$. The midprice and quoted spread are
 
 $
-  Delta m_(t+1) = beta epsilon_t f(q_t) + gamma^T z_t + xi_(t+1),
+  m_t = (a_t + b_t)/2,
+  quad
+  s_t = a_t - b_t.
 $
 
-where $z_t$ captures prior flow and liquidity. Interpreting $beta$ as “the
-impact of a trade” is dangerous unless trade initiation and market state are
-handled. The trade may convey information, remove a stale quote, mechanically
-deplete depth, or be caused by the same news that moves price.
+The bid is the highest displayed price at which someone is currently willing
+to buy. The ask is the lowest displayed price at which someone is willing to
+sell. The word *currently* matters. A quote is a revocable intention, not a
+promise that liquidity will remain until our order arrives.
 
-The propagator representation makes path dependence explicit:
-
-$
-  m_t = m_0 + sum_(j < t) G(t-j) f(q_j) epsilon_j + M_t,
-$
-
-where $G(l)$ is a decay kernel and $M_t$ is exogenous price innovation. A slowly
-decaying $G$ means past flow remains part of the state. The model connects
-persistent flow, transient impact, and market resilience @bouchaud2004.
-
-#takeaway[
-  If impact decays, remaining inventory is not a sufficient control state.
-  The algorithm also needs a summary of its outstanding impact. Trading now
-  changes both inventory and the cost of future trades.
-]
-
-== Three meanings of “market impact”
-
-The phrase is used for distinct objects:
-
-1. *Mechanical response:* the price change caused by consuming or inducing a
-   change in available liquidity, holding information fixed.
-2. *Informational response:* prices move because the order reveals information
-   or shares a cause with future returns.
-3. *Reduced-form conditional cost:* the empirical slippage of executions with
-   given characteristics under an observed policy.
-
-All three matter economically. Only the first is a clean intervention effect,
-and even it depends on the intervention definition and horizon. A production
-cost model often estimates the third. It can be useful without supporting a
-structural claim, provided policy changes do not move too far outside the data.
-
-== Temporary, permanent, and transient response
-
-A traditional execution model separates temporary impact, paid by the current
-child order, from permanent impact, which shifts all subsequent prices. Real
-markets more often show a response that builds during a metaorder and partially
-decays afterward. This motivates a transient state
-
-$
-  d r_t = -rho r_t dif t + kappa v_t dif t,
-  quad P_t = m_t^0 + r_t + h(v_t),
-$
-
-where $rho$ is resilience and $m_t^0$ is an unaffected price. The solution
-
-$
-  r_t = r_0 e^(-rho t) + kappa integral_0^t e^(-rho(t-s)) v_s dif s
-$
-
-shows why two schedules with the same total quantity can have different costs:
-their child orders overlap differently through the decay kernel.
-
-The “unaffected price” is a modeling counterfactual, not an observable tape
-field. Estimating it is an identification problem.
-
-== Liquidity state and resilience
-
-Useful liquidity measurements operate at several horizons:
+Suppose the top of the book looks like this:
 
 #table(
-  columns: (1fr, 1.25fr, 1.55fr),
+  columns: (0.8fr, 1fr, 0.8fr, 1fr),
   inset: 5pt,
   stroke: 0.5pt + rgb("d9dde2"),
   fill: (x, y) => if y == 0 { rgb("eef5fb") },
-  [*Object*], [*Examples*], [*Control relevance*],
-  [Price], [spread, mid, microprice], [aggression and benchmark cost],
-  [Book stock], [depth, slope, imbalance], [near-term capacity and fill risk],
-  [Order-flow dynamics], [trades, adds, cancels, signed imbalance], [adverse selection and depletion],
-  [Resilience], [refill time, spread recovery, impact decay], [spacing and pause decisions],
-  [Market activity], [volume rate, trade count, event intensity], [participation and clock speed],
+  [*Bid price*], [*Bid size*], [*Ask price*], [*Ask size*],
+  [\$50.01], [12,000], [\$50.02], [8,000],
+  [\$50.00], [25,000], [\$50.03], [19,000],
+  [\$49.99], [31,000], [\$50.04], [27,000],
 )
 
-The microprice is one compressed top-of-book signal. If best-bid size is $Q^b$
-and best-ask size is $Q^a$, a common convention is
+The best bid and ask describe only the first price level. *Depth* describes the
+quantities available at those prices and, more generally, at prices farther
+from the mid. A large aggressive order may execute at several prices. This is
+often called *walking the book*.
 
-$
-  p^"micro" = (a Q^b + b Q^a)/(Q^a+Q^b).
-$
+The displayed book is therefore a discrete supply and demand schedule. It says
+what can be executed against the visible state at this instant, assuming that
+nothing is cancelled, added, or repriced while the order is processed. Those
+assumptions are reasonable for a small immediate action and increasingly poor
+for a large or prolonged execution.
 
-When bid depth dominates, the microprice lies closer to the ask. This is an
-empirical predictor, not a no-arbitrage fair value; queue cancellations, hidden
-liquidity, and deeper levels can reverse its meaning.
-
-== Clock choice
-
-Calendar time is not the only clock. Trading intensity varies sharply through
-the day, so a minute near the close may contain far more events and volume than
-a minute at lunch.
-
-- *Calendar time* is required for deadlines, alpha half-life, and latency.
-- *Event time* advances with trades or book events and is useful for local
-  microstructure dynamics.
-- *Volume time* advances by market volume and often makes participation policies
-  and intraday variance more homogeneous.
-
-If cumulative expected volume is
-
-$
-  tau(t) = integral_0^t E[d V_s]/E[V_T],
-$
-
-then a uniform schedule in $tau$ is a VWAP-style schedule in calendar time.
-Volume time helps remove seasonality but does not eliminate stochastic volume or
-selection: realized volume is not known at the start.
-
-#research[
-  Never use completed-day volume to normalize a feature used intraday unless it
-  is explicitly a forecast or the task is retrospective measurement. Realized
-  ADV-like denominators can leak future activity and make backtests too stable.
+#intuition[
+  Displayed depth is a stock of liquidity. Trading volume is a flow. A book can
+  look thin and refill rapidly, or look deep and disappear as soon as it is
+  approached. Execution capacity depends on both the visible stock and the
+  dynamics behind it.
 ]
 
-== Intraday seasonality and the close
+== Orders are instructions to the matching engine
 
-Spreads, depth, volatility, volume, and participant composition vary by time of
-day. Lower observed slippage near the close need not mean that time alone causes
-lower impact. Possible mechanisms include:
+A *limit order* specifies a quantity and a worst acceptable price. A buy limit
+at \$50.01 may rest in the book because it is below the current ask. A buy limit
+at \$50.03 is immediately marketable: it can trade against offers at \$50.02 and
+\$50.03, but it should not pay more than its limit.
 
-- greater volume and faster replenishment;
-- different order mix and benchmark incentives;
-- more predictable one-sided flows around the auction;
-- selection of which orders remain or begin late;
-- shorter markout horizons or benchmark construction; and
-- conditioning on realized rather than forecast volume.
+A *market order* asks to trade immediately against available liquidity without
+specifying a price limit. In practice, execution systems often prefer a
+marketable limit order because the limit provides protection against a stale
+quote, a feed delay, or an unexpectedly thin book. “Aggressive” and “limit” are
+not opposites. Aggressiveness describes whether the order crosses the spread;
+the limit describes the worst permitted price.
 
-A time-of-day coefficient is a useful reduced-form adjustment, but research
-should test which state variable it proxies. Otherwise a regime change in the
-close can break the coefficient without warning.
+Every child order also has instructions governing what happens after it is
+submitted. It may rest until cancelled, expire immediately if it cannot fill,
+execute whatever is immediately available and cancel the remainder, or require
+the full quantity to execute at once. These details determine whether the
+algorithm is demanding liquidity, supplying it, or combining the two.
 
-== Fragmentation, dark liquidity, and auctions
+For the 20,000-share child order, an immediate-or-cancel buy with a \$50.03
+limit would take 8,000 shares at \$50.02 and 12,000 at \$50.03, assuming the
+display has not changed. A limit at \$50.02 would take only the first 8,000 and
+cancel the remaining 12,000. The second instruction pays less now but leaves
+more of the parent order exposed.
 
-In a fragmented market, the action includes venue. Displayed prices may be
-similar while fill probability, queue length, fee/rebate, latency, odd-lot
-treatment, adverse selection, and hidden liquidity differ. A router faces a
-joint allocation and timing problem with censored feedback: for unchosen venues,
-the counterfactual fill is not observed.
+This is the first microstructure version of the trade-off from Chapter 1:
+price protection preserves money conditional on not filling, while immediacy
+reduces the inventory left for later.
 
-Dark venues can reduce displayed information leakage and sometimes provide
-price improvement, but execution is uncertain and fills may be adversely
-selected. Closing auctions concentrate liquidity and eliminate continuous-book
-timing within the match, yet imbalance risk and benchmark incentives create a
-different control problem. An optimal policy must value optionality: waiting for
-uncertain passive or dark fills consumes time that could have been used to
-complete elsewhere.
+== Price priority and time priority
 
-== From mechanism to model feature
+Most continuous books rank displayed orders first by price and then by arrival
+time. A buy order at \$50.02 has priority over every bid at \$50.01. Among
+orders at the same price, the order that arrived first usually trades first.
+This is *price-time priority*.
 
-A disciplined feature story has four links:
+Suppose 12,000 shares are already waiting at the best bid and the algorithm
+posts another 5,000 behind them. A sell order for 10,000 shares can trade at the
+bid without filling any of the algorithm's order. Another 4,000 shares of sell
+volume would exhaust the original queue and fill 2,000 of the algorithm's
+order, provided the shares ahead were not cancelled and no higher-priority
+order appeared.
 
-1. mechanism: why the variable should affect price, fill, or cost;
-2. timing: when it becomes observable relative to the decision;
-3. horizon: how long its information should persist;
-4. action: which control choice should change.
+Queue priority makes time economically valuable. Cancelling and reposting may
+improve the price of an order or reduce adverse selection, but it may also give
+up a valuable place in line. Amendments can have the same effect, depending on
+venue rules. A controller that treats all orders at the same price as
+equivalent ignores part of the action.
 
-For example, book imbalance may predict the next mid move over tens of events.
-It could justify a brief change in aggression, but it is unlikely to determine a
-two-hour schedule without an aggregation and persistence model.
+#definition("queue position")[
+  Queue position is the quantity with higher execution priority than a resting
+  order at the same price. It is not always directly observable. Market-data
+  feeds show aggregate depth more reliably than the identities, cancellations,
+  and priority changes needed to reconstruct an individual order's exact place.
+]
+
+An event-time approximation makes the logic visible. Let $A_n$ be the quantity
+ahead of our order immediately before book event $n+1$. Let $D_(n+1)$ be the
+quantity removed from the front of that queue by marketable orders, and let
+$C_(n+1)^"ahead"$ be cancellations known or estimated to have occurred ahead
+of us. Then
+
+$
+  A_(n+1)
+  =
+  max lr((
+    0,
+    A_n - D_(n+1) - C_(n+1)^"ahead"
+  )).
+$
+
+If our resting quantity is $q_n$, a simplified fill equation is
+
+$
+  F_(n+1)
+  =
+  min lr((
+    q_n,
+    max lr((0, D_(n+1) + C_(n+1)^"ahead" - A_n))
+  )).
+$
+
+This is accounting, not yet a statistical fill model. In real data we may not
+know which cancellations were ahead, hidden orders may have priority, and the
+price can change before the queue reaches us. A useful fill model must average
+over these unobserved events without pretending that queue position is known
+exactly.
+
+== The displayed book as an instantaneous cost curve
+
+For an aggressive buy, let $A_t (p)$ be cumulative displayed ask depth from the
+best ask through price $p$. Its generalized inverse, $P_t^"ask" (x)$, is the
+marginal ask price paid for the $x$th share when the book is walked. The
+mechanical cost relative to the current mid is
+
+$
+  C_t^"book" (q)
+  =
+  integral_0^q lr((P_t^"ask" (x) - m_t)) dif x.
+$
+
+The average price concession per share is
+
+$
+  bar(c)_t^"book" (q)
+  =
+  C_t^"book" (q)/q.
+$
+
+For the displayed book above, buying 20,000 shares costs, relative to the mid
+$m_t=50.015$,
+
+$
+  C_t^"book" (20000)
+  =
+  8000(50.02-50.015)
+  +
+  12000(50.03-50.015)
+  =
+  220 " dollars".
+$
+
+The volume-weighted execution price is \$50.026, so the average concession is
+1.1 cents per share, or about 2.2 basis points of notional. This calculation is
+useful for validating order sizing and price protection. It is not a forecast
+of the total cost of executing the parent order.
+
+The snapshot calculation omits at least four things. Liquidity can cancel
+before we reach it. New offers may replenish after the first fill. Our trade
+can change the prices or quantities other participants display. The midprice
+can move for reasons unrelated to us. A static book curve is therefore best
+viewed as the immediate marginal cost of one action in one observed state.
+
+== Why spread is not a fixed fee
+
+For an aggressive buy executed at the best ask, the immediate price concession
+begins near $s_t/2$. The spread compensates liquidity suppliers for several
+costs: operating and venue costs, inventory risk, the option given to other
+traders to execute against a standing quote, and the risk of trading with
+someone who has better information.
+
+It is tempting to conclude that a passive buy earns half the spread. The
+arithmetic is correct at the instant of the fill: buying at the bid is cheaper
+than buying at the ask. The economic conclusion is incomplete because passive
+fills are selected. A bid is more likely to trade when sell pressure arrives,
+when the fair price is falling, or when a faster participant decides that the
+quote is stale.
+
+Let $P_t$ be our buy price and let $m_(t+tau)$ be the midprice after a markout
+horizon $tau$. A simple ex post value of the fill is
+
+$
+  M_t^"buy" (tau)
+  =
+  m_(t+tau) - P_t.
+$
+
+A positive value means the asset is worth more at the markout than we paid. A
+passive fill can capture the spread at time $t$ and still have a negative
+markout if the mid moves down immediately afterward.
+
+For a trade signed from the initiator's perspective, $epsilon_t=+1$ for a buy
+and $epsilon_t=-1$ for a sell, the effective spread is
+
+$
+  S_t^"eff"
+  =
+  2 epsilon_t (P_t - m_t),
+$
+
+while a realized-spread convention at horizon $tau$ uses
+
+$
+  S_t^"real" (tau)
+  =
+  2 epsilon_t (P_t - m_(t+tau)).
+$
+
+Their difference records the signed midprice movement after the trade. The
+choice of $tau$ is substantive: a one-second markout, a five-minute markout,
+and an end-of-order markout answer different questions.
+
+== A passive order is an option with a fill condition
+
+Posting should be evaluated jointly with the event “the order fills.” Let
+$p_t^"fill"$ be the probability that a posted order fills before a decision
+deadline. Let $G_t$ be its value if filled, including spread capture, fees, and
+the subsequent markout, and let $C_t^"miss"$ be the cost created if it does not
+fill. A schematic posting value is
+
+$
+  V_t^"post"
+  =
+  p_t^"fill" E lr([G_t | "fill", cal(F)_t])
+  -
+  (1-p_t^"fill") E lr([C_t^"miss" | "no fill", cal(F)_t]).
+$
+
+This expression is deliberately simple, but it prevents a common error. A
+model trained only on filled passive orders estimates the first conditional
+term and ignores the second. It can recommend patient posting precisely in the
+states where non-fills are most expensive.
+
+The miss cost depends on the parent order. Early in a long horizon, an unfilled
+child order may simply be cancelled and resubmitted. Near the deadline, the
+same non-fill can force an aggressive catch-up trade. If alpha predicts that
+the price will rise, the opportunity cost of missing a passive buy can dominate
+the spread it might have earned.
+
+#takeaway[
+  Passive versus aggressive is not a comparison between earning and paying the
+  spread. It is a comparison between two distributions of outcomes: execution
+  price and markout if filled, plus the future inventory and catch-up cost if
+  not filled.
+]
+
+== Order flow changes the meaning of the book
+
+The book is not only a collection of prices and sizes. It is being revised by
+a stream of submissions, cancellations, and trades. The direction, size, and
+surprise of those events help reveal whether displayed liquidity is likely to
+persist.
+
+Trade signs are positively autocorrelated over short horizons. Large investors
+split parent orders, execution algorithms release related child orders, and
+different traders can respond to the same information. Yet short-horizon
+returns are much less predictable than raw sign persistence would suggest.
+Liquidity adapts. Quotes can move, depth can thin, and the price response to an
+additional trade can depend on whether the flow was expected @bouchaud2004.
+
+A simple signed trade imbalance over events $1$ through $N$ is
+
+$
+  I_N^"trade"
+  =
+  frac(
+    sum_(n=1)^N epsilon_n q_n,
+    sum_(n=1)^N q_n
+  ),
+$
+
+where $epsilon_n$ is the aggressor sign and $q_n$ is trade size. The statistic
+lies between $-1$ and $1$. It summarizes executed flow, but it ignores new
+limit orders and cancellations.
+
+An order-flow imbalance can assign positive sign to events that strengthen the
+bid or weaken the ask, and negative sign to events that strengthen the ask or
+weaken the bid. Aggregated over a short event window, it often has more local
+price information than trade imbalance alone. Its precise definition must
+respect price-level changes; treating every decline in displayed size as a
+trade confuses cancellations with executions.
+
+Neither imbalance is a universal directional signal. The same signed flow can
+have different consequences in a deep, replenishing market and a thin,
+retreating one. An execution policy should respond to the joint state, not to a
+single imbalance threshold carried across products and regimes.
+
+== Book imbalance and the microprice
+
+Let $Q_t^b$ and $Q_t^a$ be displayed quantities at the best bid and ask. Define
+top-level imbalance by
+
+$
+  I_t^"book"
+  =
+  frac(Q_t^b - Q_t^a, Q_t^b + Q_t^a).
+$
+
+A common microprice is
+
+$
+  p_t^"micro"
+  =
+  frac(a_t Q_t^b + b_t Q_t^a, Q_t^b + Q_t^a).
+$
+
+Substituting $a_t=m_t+s_t/2$ and $b_t=m_t-s_t/2$ gives
+
+$
+  p_t^"micro"
+  =
+  m_t + s_t/2 I_t^"book".
+$
+
+When bid depth dominates, the microprice lies above the mid and closer to the
+ask. The interpretation is that the thinner ask may be depleted first. If the
+two displayed sizes are equal, the microprice reduces to the mid. If the
+spread is zero, imbalance cannot move it away from the common quote.
+
+These limiting cases make the formula intuitive, but they do not make the
+microprice a no-arbitrage fair value. Exact queue position, cancellations,
+hidden orders, deeper levels, and the event horizon all matter. Its predictive
+content should be checked by product, venue, time of day, and latency. A signal
+that predicts the next quote change may be valuable for child-order
+aggressiveness while being almost irrelevant to a ninety-minute schedule.
+
+== Mechanical response, information, and common causes
+
+When a buy trade is followed by a price rise, several stories are possible.
+The trade may have consumed the best offer mechanically. It may have revealed
+information that caused other participants to revise their quotes. The buyer
+may have reacted to information that would have moved the price even without
+the trade. Often all three operate together.
+
+This is why “market impact” needs a horizon and an estimand. At the event level
+we might model
+
+$
+  Delta m_(n+1)
+  =
+  beta epsilon_n f (q_n)
+  + gamma^T z_n
+  + xi_(n+1),
+$
+
+where $z_n$ describes the pre-trade state. The regression can predict a price
+response under the historical policy. The coefficient $beta$ is not
+automatically the price change caused by forcing an otherwise identical trade
+to occur. Trade direction and size were chosen in response to information, and
+the observed covariates may not contain all of it.
+
+A useful mechanism-level vocabulary separates:
+
+- *book consumption*: the immediate price change caused by exhausting visible
+  levels;
+- *quote response*: additions, cancellations, and repricing after the action;
+- *informational response*: belief changes induced by the order or by its
+  correlation with private information; and
+- *common-cause movement*: a price change driven by news or latent demand that
+  also caused the order.
+
+This separation does not solve identification, but it prevents a fitted
+relationship from being given a stronger interpretation than the data support.
+Chapter 6 studies empirical impact shapes, and Chapter 7 treats estimation in
+detail.
+
+== Replenishment and resilience
+
+After an aggressive order removes the best ask, the market need not remain
+depleted. Hidden quantity may refresh, new sellers may join, or the next ask
+level may become the new best price. *Resilience* describes how liquidity and
+prices recover after a disturbance.
+
+One stylized representation uses an impact or depletion state $r_t$:
+
+$
+  dif r_t
+  =
+  -rho r_t dif t
+  + kappa v_t dif t,
+  quad rho > 0.
+$
+
+Here $v_t$ is our trading rate, $kappa$ converts trading into displacement, and
+$rho$ is the recovery rate. With initial state $r_0$, the solution is
+
+$
+  r_t
+  =
+  r_0 e^(-rho t)
+  +
+  kappa integral_0^t e^(-rho (t-s)) v_s dif s.
+$
+
+The recovery half-life is $log(2)/rho$. Child orders spaced much farther apart
+than this half-life interact weakly through $r_t$. Child orders sent more
+rapidly than the market recovers cause their effects to overlap. This is one
+reason a pause can be valuable even when total quantity and participation over
+the full horizon are unchanged.
+
+The exponential model is a reference point, not a description of every book.
+Recovery can be multi-scale, asymmetric, state dependent, and partly driven by
+information rather than mechanical refill. A large trade during news may be
+followed by continued movement, not reversion. Empirical resilience should be
+measured conditional on spread, volatility, event intensity, order-flow state,
+and the action that created the disturbance. Supply-demand and propagator
+models formalize different versions of this idea @obizhaeva2013
+@bouchaud2004.
+
+== Hidden liquidity and strategic cancellation
+
+The visible book is only part of available liquidity. An iceberg order displays
+one portion while reserving additional quantity. A participant can replenish
+after a fill without formally using an iceberg. Midpoint and dark orders are
+not displayed in the lit book at all. Some apparent depth is also less durable
+than it looks because it can be cancelled before a slower trader reaches it.
+
+This creates two distinct measurement errors. Displayed depth can understate
+executable liquidity because hidden quantity may appear. It can overstate
+executable liquidity because visible quotes may be fleeting or conditioned on
+the market not moving. The direction of the error depends on state and on the
+action used to test the book.
+
+Cancellations are not merely noise. They can communicate that liquidity
+providers no longer want the inventory risk or adverse-selection exposure at a
+price. A wave of ask cancellations before a buy order arrives can be more
+informative than the displayed ask size left behind. At the same time, feed
+latency and message sequencing can make apparent cancellation signals
+untradeable. The feature timestamp must reflect when the algorithm actually
+received and processed the event.
+
+#research[
+  Do not label displayed depth as “available liquidity” without specifying the
+  action and horizon. A small immediate-or-cancel order, a passive order waiting
+  thirty seconds, and a parent order trading for an hour encounter different
+  quantities even if they begin from the same book snapshot.
+]
+
+== Liquidity is a vector, not a scalar
+
+People often describe a market as liquid or illiquid. An execution model needs
+more precision because different dimensions of liquidity govern different
+actions.
+
+#table(
+  columns: (1fr, 1.35fr, 1.6fr),
+  inset: 5pt,
+  stroke: 0.5pt + rgb("d9dde2"),
+  fill: (x, y) => if y == 0 { rgb("eef5fb") },
+  [*Dimension*], [*Possible measurements*], [*Decision it informs*],
+  [Immediate price], [spread, fees, book slope], [whether and how far to cross],
+  [Displayed capacity], [depth by level, concentration, imbalance], [child-order size and price limit],
+  [Queue dynamics], [shares ahead, depletion rate, cancellation rate], [posting price and patience],
+  [Flow capacity], [trade rate, volume rate, replenishment], [participation and child-order spacing],
+  [Adverse selection], [signed markouts, toxicity by state], [post, cancel, or cross],
+  [Recovery], [spread, depth, and impact half-lives], [pause and re-entry timing],
+)
+
+The relevant horizon changes the ranking. Tight spread and deep top-of-book
+liquidity matter to the next child order. Volume capacity and resilience matter
+to the parent schedule. Auction size matters to a benchmarked completion. A
+single composite liquidity score can be useful operationally, but its weights
+should be tied to the decisions it is intended to change.
+
+== The market runs on several clocks
+
+Ninety seconds can be quiet at lunch and contain hundreds of events near the
+close. Modeling every interval as equivalent in calendar time hides this
+variation. Three clocks are especially useful.
+
+- *Calendar time* advances uniformly. Deadlines, latency, signal half-lives,
+  and client instructions live in calendar time.
+- *Event time* advances when a chosen market event occurs, such as a quote
+  update, trade, or change at the best price. Queue and short-horizon response
+  models are often more stable in event time.
+- *Volume time* advances with traded or forecast volume. VWAP and participation
+  strategies are naturally expressed in this clock.
+
+Let $V (t)$ denote cumulative market volume by calendar time $t$, and let
+$cal(F)_0$ be the information available when the parent order begins. A
+forecast volume clock can be written
+
+$
+  tau_V (t)
+  =
+  frac(
+    E lr([V (t) | cal(F)_0]),
+    E lr([V (T) | cal(F)_0])
+  ).
+$
+
+A schedule that is uniform in $tau_V$ trades in proportion to the expected
+intraday volume curve. It is not uniform in calendar time unless expected
+volume arrives at a constant rate.
+
+Using realized end-of-day volume in the denominator would produce a clean
+retrospective chart but an infeasible live policy. At 10:07, the algorithm does
+not know the closing volume. It must use a forecast, update it as information
+arrives, and retain uncertainty about how much future volume will appear.
+
+== Intraday seasonality is a mixture of mechanisms
+
+Spread, depth, volatility, volume, order composition, and benchmark demand all
+vary through the day. It is common to observe lower average slippage near the
+close even when a first intuition suggests that concentrating an order late
+should be expensive. That observation is not necessarily contradictory.
+
+Late in the day, market volume and replenishment can be greater. A given share
+quantity may represent a smaller participation rate. The order mix may differ:
+benchmark-sensitive flows, residual parent orders, and auction interest become
+more important. Orders that survive until late may not resemble orders that
+begin earlier. Cost labels can also change mechanically if the benchmark or
+markout horizon is tied to the close.
+
+Before adding a time-of-day coefficient to an impact model, ask what it is
+standing in for. Does the effect remain after conditioning on forecast
+participation, spread, volatility, and product? Is the volume denominator known
+at decision time? Are late orders selected by urgency or benchmark? Does the
+coefficient change on news days, index rebalances, futures rolls, or shortened
+sessions?
+
+Time of day can still be a useful reduced-form feature. The danger is treating
+it as an immutable causal law. If the underlying participant mix or auction
+mechanism changes, a clock-time adjustment can fail even though its historical
+fit was excellent.
+
+== Fragmentation turns execution into a routing problem
+
+In a fragmented market, economically similar orders can be sent to several
+venues. The displayed best price may be the same, while queue length, fill
+probability, latency, fees, rebates, order types, odd-lot treatment, and adverse
+selection differ. The action must include venue as well as price and size.
+
+For venues $j=1,...,J$, an allocation vector can be written
+
+$
+  u_t
+  =
+  lr((u_t^(1), ..., u_t^(J))),
+  quad
+  sum_(j=1)^J u_t^(j) <= q_t.
+$
+
+The inequality allows the algorithm to reserve quantity rather than expose the
+entire child order. It also hides practical constraints: sending the same
+quantity to several venues can create overfill risk unless orders can be
+cancelled reliably, and the state observed by the router may already be stale
+when messages arrive.
+
+Routing data are censored. If the algorithm posts on venue A, it observes what
+happened to that order but not whether the same order would have filled on
+venue B. Comparing raw fill rates can therefore reward venues that received
+easier orders under the old policy. Evaluation needs randomization, a credible
+counterfactual model, or cautious restriction to comparable states.
+
+== Dark liquidity exchanges display for uncertainty
+
+A dark or midpoint venue can reduce displayed information leakage and may offer
+price improvement. In return, the algorithm usually receives less information
+about available quantity and a less certain fill. A dark order that does not
+fill consumes time, and a dark fill can still be adversely selected if other
+participants choose when to interact.
+
+The value of trying dark liquidity is therefore highest when the possible price
+improvement and information benefit outweigh the cost of waiting. Early in a
+long horizon, the option may be cheap. Close to a deadline or during fast alpha
+decay, the same attempt may be too risky. Minimum quantity and conditional
+order instructions change this trade-off by controlling which partial fills
+are acceptable.
+
+Dark and lit decisions are coupled. A large displayed order can reveal intent
+and change the probability or quality of a later dark fill. A dark fill reduces
+the inventory that must be worked in the lit market. Modeling them as
+independent channels misses the main control interaction.
+
+== Auctions are a different matching problem
+
+An opening or closing auction collects orders and determines a single clearing
+price that maximizes executable quantity subject to exchange rules. Time
+priority and continuous spread crossing play a different role than in the
+continuous book. Imbalance messages, indicative prices, paired quantity, and
+cutoff times become part of the state.
+
+Auctions can concentrate substantial liquidity and can be attractive for an
+order benchmarked to the close. They also create discrete risk. The final
+clearing price is unknown when the order is submitted, imbalance information
+can change sharply, and some instructions become difficult or impossible to
+cancel near the cutoff.
+
+An execution policy must decide how much inventory to reserve for the auction.
+Reserving too little can increase benchmark risk; reserving too much can leave
+the trader dependent on one uncertain event. The answer depends on the
+benchmark and constraints, not simply on the auction's average volume.
+
+== From market mechanism to control state
+
+The purpose of learning microstructure is not to place every feed field into a
+state vector. It is to identify the smallest summaries that change the ranking
+of feasible actions.
+
+For the 20,000-share decision at 10:07, the following chain is useful:
+
+1. The spread and visible ask curve describe the immediate cost of crossing.
+2. Queue position, depletion, and cancellation rates describe the chance and
+   timing of a passive fill.
+3. Signed flow and markouts describe adverse-selection risk.
+4. Replenishment and recovery describe whether splitting or pausing is likely
+   to improve later opportunities.
+5. Venue and dark states describe alternative sources of liquidity.
+6. Remaining inventory, time, alpha, and benchmark translate those market
+   outcomes into parent-order value.
+
+A feature belongs in the controller only if it completes this chain from
+mechanism to forecast to action. Book imbalance may predict the next midprice
+move over ten events. That can justify a brief change in aggressiveness. It
+does not, without a persistence model, determine a ninety-minute schedule.
+
+#takeaway[
+  Market microstructure turns “liquidity” from a scalar cost coefficient into
+  an evolving state. The controller chooses not only how much to trade, but how
+  to expose the order to queues, venues, non-fill risk, and recovery over time.
+]
 
 == Interview checks
 
 #interview[
-  *A passive fill earns half the spread. Why can its expected markout still be
-  negative?* Explain selection into fills, adverse flow, queue position, and why
-  non-fills must be valued.
+  *A passive buy earns half the spread. Why can it still be worse than crossing?*
+  Discuss selection into fills, post-fill markouts, non-fill opportunity cost,
+  queue position, alpha, and the remaining horizon.
 ]
 
 #interview[
-  *Why might a thin displayed book have low realized impact?* Discuss hidden
-  liquidity, fast replenishment, cancellation behavior, child-order spacing,
-  and the difference between snapshot depth and flow capacity.
+  *Why can a thin displayed book have low realized impact?* Distinguish snapshot
+  depth from hidden quantity, replenishment, event intensity, child-order
+  spacing, and the horizon over which impact is measured.
 ]
 
 #interview[
-  *Observed slippage is lower near the close. What would you investigate before
-  adding a time-of-day multiplier?* Separate liquidity mechanisms, order
-  selection, benchmark effects, denominator leakage, and post-trade horizon.
+  *Buy trades have been persistent for several minutes. Should a buy algorithm
+  accelerate or slow down?* Explain why the answer depends on whether the flow
+  predicts price movement, whether the ask is retreating or replenishing, the
+  algorithm's own contribution to the flow, and the cost of remaining inventory.
+]
+
+#interview[
+  *A venue has the highest historical passive fill rate. Why not route there
+  exclusively?* Address selection under the historical router, queue state,
+  latency, adverse selection, fees, non-fills, and the missing counterfactual
+  outcomes on venues not chosen.
 ]
 
 == Exercises
 
-1. Derive $p^"micro"-m$ in terms of spread and normalized top-level imbalance.
-   Check its sign when bid depth exceeds ask depth.
-2. Simulate the resilience state for two schedules with equal quantity: one
-   block and ten equally spaced child orders. Compare the area under $v_t r_t$.
-3. Propose a leakage-safe estimate of the intraday volume curve for a symbol with
-   sparse history. Explain how hierarchical pooling or clustering would help.
-4. Define a state and action space for a two-venue router with one lit and one
-   dark venue. Identify the censored outcomes.
+1. Using the displayed book in the opening section, compute the execution price
+   and mid-relative cost of buying 5,000, 20,000, and 40,000 shares. Plot or
+   tabulate average cost per share against quantity and explain the shape.
+2. An order joins a 12,000-share bid queue with 5,000 shares. The next events
+   remove 4,000 shares by trades, cancel 3,000 shares ahead, add 6,000 shares
+   behind the order, and then remove 8,000 shares by trades. Track the quantity
+   ahead and the fill of the order under price-time priority.
+3. Derive $p_t^"micro"-m_t$ in terms of spread and top-level imbalance. Check
+   the cases $Q_t^b=Q_t^a$, $Q_t^b >> Q_t^a$, and $s_t=0$. State why these
+   algebraic checks do not establish predictive validity.
+4. Construct a posting-value calculation with a sixty-percent fill probability,
+   expected spread capture of 0.5 cents, an adverse markout of 0.3 cents when
+   filled, and a 1.2-cent catch-up cost when unfilled. Compare it with crossing
+   immediately for 0.6 cents.
+5. Simulate or calculate the resilience state for one block trade and for ten
+   equally sized child orders. Hold total quantity fixed and vary the spacing
+   relative to the recovery half-life.
+6. Design a leakage-safe study of the observation that slippage is lower near
+   the close. Define the unit of analysis, pre-decision variables, volume
+   forecast, benchmark, markout horizon, sample splits, and diagnostics needed
+   before interpreting a time-of-day coefficient.
+7. Define the state, actions, observations, and censored counterfactuals for a
+   router choosing between one lit venue and one midpoint dark venue. Explain
+   one randomized experiment that could improve policy evaluation.
+
+== Where the book goes next
+
+This chapter has described how orders enter queues, consume displayed depth,
+interact with order flow, and encounter uncertain replenishment across venues.
+The next chapter asks how to measure the result. It defines execution cost,
+shows how the benchmark changes the economic question, and separates realized
+accounting from causal claims about what the execution policy caused.
