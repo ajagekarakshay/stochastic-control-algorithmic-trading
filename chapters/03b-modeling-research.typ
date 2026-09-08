@@ -94,7 +94,7 @@ variables and dependencies into the open.
 A generic representation is
 
 $
-  Y = f(X, Z, A, U) + epsilon,
+  Y = f (X, Z, A, U) + epsilon,
 $
 
 where
@@ -167,7 +167,7 @@ produce the coefficient-implied reduction in slippage.
 Causal analysis asks what would happen under an intervention:
 
 $
-  E[Y(a') - Y(a)].
+  E lr([Y (a') - Y (a)]).
 $
 
 This requires assumptions about treatment assignment, confounding, overlap,
@@ -436,7 +436,7 @@ It does *not* say that the features causally generate 40% of the phenomenon.
 More useful for research is often the incremental change
 
 $
-  Delta R^2 = R^2(X, Z) - R^2(X),
+  Delta R^2 = R^2 (X, Z) - R^2 (X),
 $
 
 evaluated out of sample. If adding volatility to a model with size and spread
@@ -468,7 +468,7 @@ framework rather than an equation to memorize.
 For a learned predictor $hat(f)$ evaluated at $x$,
 
 $
-  E[(Y-hat(f)(x))^2]
+  E lr([(Y-hat(f) (x))^2])
   =
   "noise"
   + "bias"^2
@@ -574,7 +574,7 @@ variables that represent mechanisms:
 Then ask whether
 
 $
-  E[e | X_j]
+  E lr([e | X_j])
 $
 
 is approximately zero across the deployment range.
@@ -713,16 +713,16 @@ while the other requires extrapolation.
 Useful outputs can therefore include
 
 $
-  E[Y|X],
-  quad Q_tau(Y|X),
-  quad P(Y>c|X),
+  E lr([Y | X]),
+  quad Q_tau (Y | X),
+  quad P (Y>c | X),
 $
 
 along with confidence or stability measures for the fitted relationship.
 
 Calibration should be checked empirically. If a model claims that 90% prediction
 intervals contain the outcome only 60% of the time in high-volatility periods,
-the uncertainty model is not merely imperfect—it is systematically misleading
+the uncertainty model is not merely imperfect - it is systematically misleading
 where risk is high.
 
 == Distribution shift is a modeling problem, not just a monitoring problem
@@ -730,12 +730,12 @@ where risk is high.
 Suppose the conditional relationship at time $t$ is
 
 $
-  P_t(Y | X).
+  P_t (Y | X).
 $
 
 A model trained on historical data assumes, explicitly or implicitly, that this
-relationship will remain useful in the future. In markets, both $P(X)$ and
-$P(Y|X)$ can change.
+relationship will remain useful in the future. In markets, both $P (X)$ and
+$P (Y | X)$ can change.
 
 Examples include:
 
@@ -771,13 +771,13 @@ The downstream loss should therefore appear in model evaluation.
 If the action selected from model $m$ is
 
 $
-  a_m^*(x) = arg min_a hat(C)_m(a,x),
+  a_m^* (x) = arg min_a hat(C)_m (a,x),
 $
 
 we care about the realized or simulated decision loss
 
 $
-  L_m = C(a_m^*(x),x) - C(a_"reference"^*(x),x),
+  L_m = C (a_m^* (x),x) - C (a_"reference"^* (x),x),
 $
 
 not only the prediction error averaged over historical actions.
@@ -812,7 +812,7 @@ heavy tails, and changes in measurement conventions.
 A first hypothesis might be:
 
 $
-  C = f("relative size", "speed", "spread", "volatility", "depth",
+  C = f ("relative size", "speed", "spread", "volatility", "depth",
         "flow state", "time", "regime") + epsilon.
 $
 
@@ -1021,7 +1021,7 @@ evidence.
 === 10. Does it improve the downstream decision?
 
 For trading models, evaluate schedules, risk, tail behavior, and policy
-stability—not just average prediction error.
+stability - not just average prediction error.
 
 == What mature modeling intuition looks like
 
@@ -1123,3 +1123,10 @@ and updating the mental picture of the data-generating process.
 8. Compare two models with almost identical RMSE but different smoothness in
    participation. Describe an experiment that evaluates which model is safer for
    schedule optimization.
+
+== Where the book goes next
+
+A disciplined modeling process still depends on the table supplied to it. The
+next chapter moves beneath the dataframe and reconstructs how parent orders,
+child messages, fills, quotes, trades, reference data, and several clocks become
+observations that a statistical model is allowed to learn from.

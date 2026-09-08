@@ -28,13 +28,13 @@
 #chapter-nav(<book-chapter-index>, previous-target: <ch-microstructure>, next-target: <ch-modeling-research>)
 
 #include "chapters/03b-modeling-research.typ"
-#chapter-nav(<book-chapter-index>, previous-target: <ch-tca>, next-target: <ch-impact>)
+#chapter-nav(<book-chapter-index>, previous-target: <ch-tca>, next-target: <ch-execution-data>)
 
-#include "chapters/04-impact-estimation.typ"
-#chapter-nav(<book-chapter-index>, previous-target: <ch-modeling-research>, next-target: <ch-optimal-execution>)
+#include "chapters/04-execution-data.typ"
+#chapter-nav(<book-chapter-index>, previous-target: <ch-modeling-research>, next-target: <ch-impact-empirical>)
 
-#include "chapters/05-optimal-execution.typ"
-#chapter-nav(<book-chapter-index>, previous-target: <ch-impact>)
+#include "chapters/05-impact-empirical.typ"
+#chapter-nav(<book-chapter-index>, previous-target: <ch-execution-data>)
 
 #pagebreak()
 #bibliography("references.bib", title: [References], style: "ieee")

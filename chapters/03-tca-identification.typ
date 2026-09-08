@@ -1,261 +1,671 @@
 #import "../style.typ": intuition, interview, research, takeaway, definition
 
-= Transaction Costs and Statistical Identification <ch-tca>
+= What Does an Execution Cost? <ch-tca>
 
-Transaction-cost analysis is where market data becomes evidence. It is also
-where seemingly minor definitions can reverse conclusions. A benchmark chooses
-a counterfactual; a sampling rule chooses a population; a standard error chooses
-which dependence is acknowledged. Before fitting a sophisticated model, we must
-make these choices explicit.
+The 400,000-share buy order from Chapter 1 finishes at 11:30. Its average fill
+price is \$50.08. Was that expensive?
 
-== The parent order is the unit of intent
+There is no answer until we choose what the execution is being compared with.
+The stock was near \$50.00 when the algorithm received the order, traded at an
+interval VWAP of \$50.06, and closed at \$50.12. Relative to arrival, the fills
+cost roughly 16 basis points. Relative to VWAP, they cost about 4 basis points.
+Relative to the close, they saved about 8 basis points. None of these
+calculations is arithmetically wrong. Each measures a different economic
+question.
 
-Let a parent buy order have requested quantity $Q$, fills $(q_i,p_i,t_i)$,
-completed quantity $Q_f=sum_i q_i$, and average execution price
+This is the central lesson of transaction-cost analysis: cost is not a property
+of the fills alone. It is a comparison between what happened and a specified
+alternative. The benchmark defines that alternative, the treatment of unfilled
+shares defines the population being judged, and the aggregation rule decides
+which orders receive the most influence. Only after those choices are explicit
+does a number such as “6 basis points” acquire meaning.
+
+The chapter develops the accounting carefully, then asks the harder statistical
+question: which part of an observed shortfall can legitimately be attributed to
+the execution policy?
+
+== Begin with the parent order
+
+A parent order carries the investment intent. Child orders and fills are the
+mechanism used to implement it. For parent order $i$, let
+
+- $epsilon_i=+1$ for a buy and $epsilon_i=-1$ for a sell;
+- $Q_i$ be requested quantity;
+- $(q_(i,j), P_(i,j), t_(i,j))$ describe fill $j$;
+- $Q_i^"fill" = sum_j q_(i,j)$ be completed quantity; and
+- $T_i$ be the evaluation time or deadline.
+
+The volume-weighted average execution price is
 
 $
-  overline(P) = (sum_i q_i p_i)/Q_f.
+  bar(P)_i
+  =
+  frac(sum_j q_(i,j) P_(i,j), Q_i^"fill").
 $
 
-Child fills from the same parent are not independent research observations. They
-share urgency, benchmark, signal, market path, and adaptive policy. Treating
-each fill as independent inflates sample size and understates uncertainty.
+This average describes the filled shares. It does not yet account for any
+quantity left unexecuted. Nor does it say whether the execution was good,
+because no benchmark has been introduced.
 
-Use a side variable $epsilon=+1$ for buys and $-1$ for sells. A side-adjusted
-cost relative to benchmark $B$ is
+Side adjustment makes buy and sell observations comparable. For a benchmark
+price $B_i$, define filled-quantity cost in dollars per share as
 
 $
-  C_B = 10^4 epsilon (overline(P)-B)/B " bps".
+  c_i (B_i)
+  =
+  epsilon_i lr((bar(P)_i-B_i)).
 $
 
-Positive values then represent cost on both sides. State whether fees, rebates,
-commissions, taxes, and financing are included.
+A positive value is unfavorable on both sides: a buy paid above its benchmark,
+or a sell received less. In basis points,
 
-== Benchmarks answer different questions
+$
+  c_i^"bps" (B_i)
+  =
+  10^4 epsilon_i frac(bar(P)_i-B_i, B_i).
+$
+
+The denominator should be stated. Dividing by the benchmark is common; dividing
+by arrival mid, average execution price, or notional produces slightly different
+numbers. Differences are small for ordinary price moves, but a research table
+should never leave the convention implicit.
+
+#definition("side-adjusted cost")[
+  A side-adjusted cost is defined so that positive always means unfavorable and
+  negative means favorable. This convention prevents buy and sell effects from
+  cancelling merely because their raw price differences have opposite signs.
+]
+
+== The benchmark chooses the question
+
+A benchmark is often described as a ruler. That metaphor is incomplete: rulers
+do not change the meaning of what they measure, whereas execution benchmarks do.
+Each benchmark chooses a hypothetical price path or trading rule against which
+the realized execution is compared.
 
 #table(
-  columns: (0.8fr, 1.35fr, 1.8fr),
+  columns: (0.85fr, 1.55fr, 1.75fr),
   inset: 5pt,
   stroke: 0.5pt + rgb("d9dde2"),
   fill: (x, y) => if y == 0 { rgb("eef5fb") },
-  [*Benchmark*], [*Question*], [*Main vulnerability*],
-  [Decision price], [Cost from investment decision onward], [Decision timestamp and pre-routing delay],
-  [Arrival price], [Quality after algo receives the order], [Pre-existing short-horizon alpha and arrival noise],
-  [Interval VWAP], [Performance versus market volume schedule], [Endogenous interval, realized-volume leakage, benchmark gaming],
-  [Close], [Performance for close-valued portfolios], [Large exogenous price move before the close],
-  [Reversion price], [How much execution-period move persists], [Arbitrary horizon and new information after completion],
+  [*Benchmark*], [*Question answered*], [*What can dominate the result*],
+  [Decision price], [What was lost between the investment decision and execution?], [Delay before the algorithm received control],
+  [Arrival price], [What happened after the execution process began?], [Market movement during the order],
+  [Interval VWAP], [How did the fills compare with the market's realized volume-weighted path?], [Schedule and realized-volume interaction],
+  [TWAP], [How did the fills compare with equal weighting through clock time?], [Price path and interval definition],
+  [Close], [How did execution compare with the price at which the position is valued?], [Movement between arrival and the auction or close],
+  [Post-trade markout], [What happened after a fill or program completed?], [Horizon choice and subsequent information],
 )
 
-Arrival-price shortfall is natural for measuring the execution algorithm because
-it starts the clock when the algo gains control. It is not a pure impact measure:
-the no-trade price could have moved during the execution for informational or
-random reasons.
+The benchmark should follow the order's purpose. An arrival benchmark is natural
+when evaluating the algorithm from the moment it receives control. A close
+benchmark can be appropriate for a portfolio valued at the close. VWAP is useful
+when the objective is to track the market's realized volume distribution. These
+are not interchangeable estimates of a hidden “true cost.”
 
 #intuition[
-  A benchmark is not a neutral ruler. It specifies the world against which the
-  execution is judged. Arrival asks, “What happened after control was handed to
-  the algo?” VWAP asks, “Did the schedule beat the market's realized volume-
-  weighted path?” These are different objectives, not competing estimates of one
-  true cost.
+  If a buy order pays \$50.08 and the market rises from \$50.00 to \$50.12, arrival
+  shortfall says the order paid more than was available initially. Close
+  slippage says it acquired the shares below their closing value. Both facts can
+  matter. The mistake is using one while speaking as though it answered the
+  other.
 ]
 
-== Implementation-shortfall decomposition
+== Decision price and arrival price separate delay from execution
 
-Suppose $Q_f <= Q$ shares fill and mark unfilled inventory at price $P_T$. Total
-arrival shortfall in dollars for a buy is
-
-$
-  "IS" = sum_i q_i(p_i-P_0) + (Q-Q_f)(P_T-P_0) + "explicit costs".
-$
-
-It can be decomposed algebraically in many ways. One useful research
-decomposition separates:
-
-- spread and explicit-cost component;
-- market movement during the schedule;
-- price paid relative to contemporaneous mid;
-- post-trade reversion or persistent markout; and
-- opportunity cost of unfilled quantity.
-
-The decomposition is descriptive unless an unaffected price path is identified.
-For example, contemporaneous-mid cost captures local aggression but the mid may
-already contain the program's earlier impact.
-
-== The missing counterfactual
-
-For order $i$, define potential cost $Y_i(a)$ under execution policy $a$. The
-causal effect of changing from policy $a$ to $a'$ is
+Suppose a portfolio manager decides to buy at time $t_d$, but the order reaches
+the execution algorithm at $t_0>t_d$. Let $P_d$ and $P_0$ be suitable reference
+prices at those times. For a completed buy, the total decision-price shortfall
+per share decomposes exactly as
 
 $
-  tau = E[Y_i(a')-Y_i(a)].
+  bar(P)-P_d
+  =
+  lr((P_0-P_d))
+  +
+  lr((bar(P)-P_0)).
 $
 
-Only one potential outcome is observed. A historical comparison estimates
-$E[Y|A=a']-E[Y|A=a]$, which equals $tau$ only under assumptions such as
-exchangeability after conditioning on pre-treatment state $X$:
+The first term is delay cost; the second is execution-period arrival shortfall.
+This identity is useful because responsibility often changes at arrival. It does
+not make the second term pure market impact. Prices can move after arrival for
+reasons unrelated to the order.
+
+The reference timestamp matters. “Arrival” might mean receipt by a broker,
+acceptance by an algorithm, release from a risk check, or first market action.
+A five-second difference can be material for a short-horizon signal. Research
+and production systems therefore need a named clock event, not merely a column
+called `arrival_price`.
+
+The reference price also matters. Last trade, same-side quote, opposite-side
+quote, midpoint, and microprice embed different portions of the spread. For a
+side-neutral measure of movement after control begins, the contemporaneous mid
+is usually easier to interpret than the last trade. For a realistic executable
+alternative, a quote or book-based benchmark may be more appropriate.
+
+== Implementation shortfall includes what did not trade
+
+Perold's implementation-shortfall idea compares an actual portfolio with a
+paper portfolio that could transact at the decision price without frictions
+@perold1988. Its most useful feature is that it does not make unfinished orders
+disappear.
+
+Suppose $Q^"fill" <= Q$ and value the remaining quantity at $P_T$. Ignoring
+cash financing for the moment, a side-adjusted dollar shortfall relative to
+benchmark $B$ is
 
 $
-  (Y(a),Y(a')) perp A | X,
+  "IS"_B
+  =
+  epsilon lr((
+    sum_j q_j lr((P_j-B))
+    +
+    lr((Q-Q^"fill")) lr((P_T-B))
+  ))
+  + K,
 $
 
-together with overlap and consistent treatment definition.
+where $K$ contains commissions, fees, taxes, and other explicit costs expressed
+as positive dollars. Dividing by requested benchmark notional $Q B$ gives
 
-Execution challenges each assumption:
+$
+  "IS"_B^"bps"
+  =
+  10^4 frac("IS"_B, Q B).
+$
 
-- urgency and alpha affect both chosen strategy and subsequent price;
-- policy parameters vary continuously and adapt within the order;
-- an algorithm can change which fills and even which completion times exist;
-- one order's action may affect another order's outcome; and
-- market regimes with one policy may have little overlap with another.
+For the running buy order, suppose 392,000 shares fill at \$50.08, 8,000 remain,
+the arrival mid is \$50.00, and the residual is marked at \$50.15. Before explicit
+costs,
+
+$
+  "IS"_"arrival"
+  =
+  392000(50.08-50.00)
+  +
+  8000(50.15-50.00)
+  =
+  32560 " dollars".
+$
+
+That is 8.14 cents per requested share, or 16.28 basis points. Measuring only
+the filled shares would report 16 basis points and would ignore the more
+expensive unfilled remainder. The difference is modest here; under a tight price
+limit or a rapidly moving market, it can reverse a policy comparison.
+
+== Opportunity cost is not a penalty added by taste
+
+The residual term is sometimes called opportunity cost. It represents the value
+of exposure the intended portfolio did not obtain. For a buy, an unfilled share
+is costly if the price subsequently rises; for a sell, it is costly if the price
+falls.
+
+The marking rule must match the evaluation question. Marking at the deadline
+asks what completing then would have cost. Marking at the close asks how the
+unfilled position affected close-valued performance. Completing the residual
+with a later emergency trade measures a different realized policy.
+
+There is no universal correct mark because the economic action after non-
+completion is part of the order instruction. If the portfolio manager cancels
+the investment thesis at 11:30, a close mark may be irrelevant. If the shares
+must be owned by the close, the residual cannot simply be recorded as zero.
 
 #research[
-  Realized participation, duration, completion, and fill count are usually
-  outcomes of the policy as well as descriptors of the order. Conditioning on
-  them can block part of the effect or introduce collider bias. Prefer intended
-  parameters and pre-trade forecasts when defining treatment and controls.
+  Dropping incomplete orders creates completion bias. A passive or tightly
+  constrained policy can look cheap precisely because its difficult residuals
+  are absent from the filled-order sample. Report completion jointly with cost,
+  and define how every requested share enters the outcome.
 ]
 
-== Randomized and quasi-experimental comparisons
+== VWAP and TWAP are path benchmarks
 
-Randomized A/B tests are the cleanest design when operationally safe. Randomize
-at the parent-order level, preserve allocation logs, and check:
-
-1. treatment assignment occurred before any treatment-dependent action;
-2. sample-ratio mismatch and logging failures;
-3. pre-treatment balance by side, size, liquidity, urgency, symbol, and time;
-4. adherence and crossovers;
-5. interference between simultaneous orders; and
-6. heterogeneous effects and tail risk, not merely mean cost.
-
-If randomization is unavailable, options include matching, regression
-adjustment, inverse-propensity weighting, doubly robust estimation, instruments,
-and natural experiments. Each replaces randomization with assumptions. A method
-name does not make those assumptions credible.
-
-For binary treatment with propensity $e(X)=P(A=1|X)$, the inverse-weighted
-average-treatment estimator is
+Partition the evaluation interval into trades or buckets. Market VWAP is
 
 $
-  hat(tau) = 1/n sum_i [A_i Y_i/e(X_i) - (1-A_i)Y_i/(1-e(X_i))].
+  P^"VWAP"
+  =
+  frac(sum_l V_l P_l, sum_l V_l),
 $
 
-Extreme weights reveal lack of overlap. Trimming changes the target population
-and must be reported.
+where $V_l$ is eligible market volume at price $P_l$. TWAP over $L$ equal clock
+intervals is
 
-== Dependence and uncertainty
+$
+  P^"TWAP"
+  =
+  frac(1,L) sum_(l=1)^L M_l,
+$
 
-Order costs are heavy-tailed, heteroskedastic, and dependent across common
-symbols, days, clients, or market events. The standard error of an IID sample
-mean, $s/sqrt(n)$, is too small if observations share shocks.
+where $M_l$ is a chosen reference, often the interval midprice.
 
-Choose a resampling or variance strategy aligned with the variation of interest:
+VWAP gives more weight to prices at which more market volume traded. TWAP gives
+equal weight to clock intervals. If prices rise while volume is concentrated
+late, VWAP can exceed TWAP substantially. An execution can beat one and miss the
+other without contradiction.
 
-- cluster by parent order when modeling child-level events;
+The interval definition is part of the benchmark. Order-lifetime VWAP changes
+when the policy changes completion time. A slower algorithm can alter its own
+comparison window. A fixed client interval avoids that endogeneity but may
+include market activity before the first fill or after completion. State which
+version is used.
+
+Eligibility rules matter too. Opening and closing auctions, off-exchange prints,
+odd lots, corrected trades, and condition-coded transactions may or may not
+belong in market volume. A benchmark calculated independently by two systems
+can differ because the trade filters differ, even when both formulas say VWAP.
+
+== A benchmark can be forecastable, realized, or tradeable
+
+Three properties are easily conflated:
+
+- A *realized* benchmark can be calculated after the interval ends.
+- A *forecastable* benchmark can be estimated using information available while
+  the order is active.
+- A *tradeable* benchmark can be approximated by a feasible strategy under the
+  order's constraints.
+
+The final interval VWAP is realized but not known at arrival. A forecast volume
+curve makes a VWAP-like schedule possible, but the realized volume distribution
+will differ. The closing auction price is tradeable for eligible quantity only
+if the order can enter the auction under its rules and cutoff times.
+
+This distinction becomes important when a model or optimizer uses a benchmark.
+Using realized end-of-day volume to explain historical slippage may be valid
+retrospective TCA. Feeding the same value into a pre-trade schedule is leakage.
+
+#pagebreak()
+
+== The close benchmark contains a deliberate exposure
+
+For a close-valued portfolio, trading below the closing price has direct value.
+For a buy order, close slippage is
+
+$
+  c^"close"
+  =
+  frac(bar(P)-P_"close", P_"close").
+$
+
+An early fill creates exposure to the subsequent market move. This is not noise
+around the benchmark; it is part of the benchmark objective. Waiting until the
+auction reduces tracking error to the close but increases dependence on one
+liquidity event and can create non-completion risk.
+
+The close therefore changes the control problem. An arrival-cost optimizer
+penalizes price movement while inventory remains. A close-benchmark optimizer
+cares about the difference between acquired exposure and a terminal valuation.
+The same schedule cannot be judged fairly under both objectives without
+acknowledging the intended benchmark.
+
+== Markouts answer a local question
+
+A markout compares a fill with a later reference price. For fill $j$ and horizon
+$tau$, define the side-adjusted midprice response
+
+$
+  M_j (tau)
+  =
+  epsilon lr((m_(t_j+tau)-P_j)).
+$
+
+For a buy, a positive markout means the later mid exceeds the price paid; from
+the perspective of acquiring the asset, the fill looks favorable. Some trading
+systems use the opposite sign, so the convention must be printed alongside the
+metric.
+
+Markouts can diagnose spread capture and adverse selection. A passive buy may
+execute at the bid yet have a poor short-horizon markout because fills arrive
+when the price is about to fall. An aggressive buy may pay the spread just
+before the price rises. Comparing one-second, one-minute, and post-completion
+markouts describes different parts of the response path.
+
+Markouts do not automatically identify impact. The later mid contains public
+news, other traders' flow, the parent order's subsequent child orders, and any
+information correlated with the decision to trade. The measure is still useful;
+its interpretation is conditional rather than magical.
+
+== Cost decompositions are accounting choices
+
+Researchers often want to split arrival shortfall into spread, impact, timing,
+fees, and opportunity cost. Such a split is helpful only when the terms are
+defined so they add back to the total.
+
+For completed order fills, insert the contemporaneous mid $m_(t_j)$:
+
+$
+  epsilon lr((P_j-B))
+  =
+  epsilon lr((P_j-m_(t_j)))
+  +
+  epsilon lr((m_(t_j)-B)).
+$
+
+After weighting fills, the first component is price paid relative to the local
+mid. It includes half-spread, book walking, fees omitted from price, and any
+short-lived displacement already present at the fill. The second component is
+the movement of the mid between the benchmark and the times at which quantity
+was acquired.
+
+This identity is exact, but the labels “impact” and “timing” are not structural
+facts. The contemporaneous mid may already have moved because of earlier child
+orders. Conversely, unrelated market news may move it while the order trades.
+Accounting tells us where the realized dollars appear; it does not reveal what
+the price would have been without the order.
+
+== Spread cost depends on the reference
+
+Let $a_t$, $b_t$, and $m_t$ be the best ask, bid, and mid. For a buy executed at
+$P_t$, local price concession is $P_t-m_t$. If the fill occurs at the best ask
+in a one-tick market, this begins near half the quoted spread. A fill deeper in
+the book contains additional walking cost; a midpoint or price-improved fill may
+contain less.
+
+Effective spread doubles the signed local concession:
+
+$
+  S_t^"eff"
+  =
+  2 epsilon_t lr((P_t-m_t)).
+$
+
+Realized spread at horizon $tau$ replaces the contemporaneous mid with the later
+mid:
+
+$
+  S_t^"real" (tau)
+  =
+  2 epsilon_t lr((P_t-m_(t+tau))).
+$
+
+Their difference is the signed post-trade midprice movement. This decomposition
+is useful for studying liquidity provision, but it should not be mixed silently
+with parent-order arrival shortfall. One is a fill-level local measure; the
+other evaluates an execution episode against its initial benchmark.
+
+== Realized cost is one draw from a distribution
+
+For an order with pre-trade state $X$ executed under policy $pi$, write the
+random cost as
+
+$
+  C^pi = C^pi lr((X, omega)),
+$
+
+where $omega$ represents the future market path, fills, and other disturbances.
+The observed TCA number is one realization. The policy problem usually depends
+on a conditional distribution such as
+
+$
+  cal(L) lr((C^pi | X)),
+$
+
+not merely on that one number.
+
+Expected cost, median cost, variance, upper quantiles, completion probability,
+and expected shortfall describe different features of this distribution. A
+policy can lower average cost while worsening a right tail. Another can accept
+a slightly higher mean in exchange for reliable completion. Reporting only a
+cross-sectional average hides these trade-offs.
+
+This also changes how a single order should be discussed. “The order cost 16
+basis points” is an accounting statement. “The algorithm should have cost 7
+basis points” is a model-based expectation. The 9-basis-point residual contains
+market randomness, label noise, and possible model failure; it is not, by
+itself, proof that the trader made a mistake.
+
+== The missing no-trade path
+
+Suppose $Y_i (pi)$ is the potential cost of order $i$ under policy $pi$. The
+effect of replacing policy $pi_0$ with $pi_1$ is
+
+$
+  tau
+  =
+  E lr([Y_i (pi_1)-Y_i (pi_0)]).
+$
+
+Only one potential outcome is observed for each order. A historical difference
+
+$
+  E lr([Y | Pi=pi_1]) - E lr([Y | Pi=pi_0])
+$
+
+also reflects differences in the orders and market states assigned to the two
+policies. If urgent, large, or illiquid orders are preferentially sent to
+$pi_1$, its raw cost can be worse even when it improves each order it receives.
+
+Conditional comparisons require assumptions. With pre-treatment variables $X$,
+a common identification condition is
+
+$
+  lr((Y (pi_0),Y (pi_1))) perp Pi | X,
+$
+
+together with overlap, consistent treatment definitions, and limited
+interference. Execution makes each assumption difficult: policies adapt within
+orders, simultaneous programs share the market, and some regions of size or
+urgency may never receive both policies.
+
+#research[
+  Realized participation, realized duration, fill count, and completion are
+  often consequences of the execution policy. Controlling for them can remove
+  part of the policy effect or create selection bias. Prefer assigned parameters
+  and variables known before treatment when estimating a policy comparison.
+]
+
+== Randomization is powerful when the unit is correct
+
+A safe A/B test can turn the missing counterfactual into a design problem.
+Randomize at the parent-order level, not at the fill level, because fills within
+a parent share intent, state, and adaptive decisions. Stratification can balance
+size, side, liquidity, benchmark, urgency, and time of day before assignment.
+
+Before reading the cost difference, check:
+
+1. assignment occurred before policy-dependent actions;
+2. the intended allocation ratio matches the observed ratio;
+3. pre-treatment variables are balanced;
+4. crossovers and fallback behavior are recorded;
+5. both policies have comparable completion rules;
+6. simultaneous orders do not create material interference; and
+7. the effect is stable across economically important groups and tails.
+
+When randomization is unavailable, regression adjustment, matching, weighting,
+instruments, or natural experiments can help. Each substitutes assumptions for
+random assignment. The credibility comes from the trading mechanism and data
+collection process, not from the sophistication of the estimator.
+
+== Aggregation decides whose experience is represented
+
+Suppose costs are $c_i^"bps"$ for $n$ parent orders. The equal-order mean is
+
+$
+  bar(c)^"order"
+  =
+  frac(1,n) sum_(i=1)^n c_i^"bps".
+$
+
+A notional-weighted mean is
+
+$
+  bar(c)^"notional"
+  =
+  frac(sum_i w_i c_i^"bps", sum_i w_i),
+  quad w_i=Q_i B_i.
+$
+
+The first describes the average parent-order experience. The second describes
+basis-point cost per unit of capital traded. A share-weighted mean gives still
+another answer and is difficult to compare across different prices or contract
+multipliers.
+
+These summaries can rank algorithms differently. Many small easy orders can
+dominate an equal-order mean; a few large programs can dominate a notional-
+weighted mean. A serious TCA report shows both, plus the size distribution and
+the contribution of the largest observations.
+
+Aggregation across time introduces another choice. Pooling two years of orders
+estimates a historical mixture. A rolling mean emphasizes the recent regime.
+Symbol-level averaging gives each symbol equal influence, whereas pooling all
+orders favors liquid symbols with more observations. There is no neutral
+aggregation; there is only an aggregation aligned, or misaligned, with the
+question.
+
+== Dependence changes uncertainty
+
+Parent-order costs are neither independent nor identically distributed. Orders
+on the same date share macro news and liquidity conditions. Orders in the same
+symbol share tick size, volatility, and venue behavior. Several client orders
+may be crossed or worked by related logic. Large orders have wider conditional
+cost distributions than small ones.
+
+The familiar standard error $s/sqrt(n)$ assumes IID observations. It is usually
+too optimistic when common shocks create positive dependence. Choose an
+uncertainty method that respects the source of variation:
+
+- cluster by parent order for child-level analysis;
 - cluster or block by date for common market shocks;
-- consider symbol and date multiway clustering for cross-sectional panels;
-- use a block bootstrap for serially dependent time series; and
-- report robust location and tail summaries alongside the mean.
+- use symbol and date multiway clustering for panels when appropriate;
+- use block bootstrap methods for serial time series; and
+- preserve treatment assignment strata in randomized experiments.
 
-If orders carry different notionals, distinguish the equal-order estimand from
-the dollar- or share-weighted estimand. A weighted mean answers a different
-business question and can be dominated by a few large orders.
+Heavy tails also make the sample mean unstable. Report medians, trimmed or
+Huberized summaries as diagnostics, high quantiles, and the fraction of total
+dollar cost contributed by the worst orders. Robust summaries do not replace
+the mean when dollars are additive, but they reveal whether the conclusion
+rests on a handful of episodes.
 
-== A leakage-safe data contract
+== A practical cost report is a distribution with context
 
-For every column, record:
+A useful transaction-cost report should answer five questions in order.
+
+1. *What entered the sample?* State order types, dates, products, filters,
+   completion requirements, and missingness.
+2. *What exactly is the outcome?* State benchmark, timestamp, price source,
+   side convention, units, explicit costs, and residual treatment.
+3. *What is the aggregate result?* Show order- and notional-weighted location,
+   dispersion, tails, and completion.
+4. *Where does it change?* Condition on size, participation, spread, volatility,
+   liquidity, time of day, symbol, benchmark, and regime.
+5. *What comparison is justified?* Separate descriptive accounting, predictive
+   expectation, and causal policy evaluation.
+
+The report should make reconciliation possible. Requested quantity must equal
+filled plus cancelled or outstanding quantity under an explicit state rule.
+Fill dollars should reproduce the average price. Benchmark construction should
+be versioned. Totals should agree from raw events through the final table.
+
+== Diagnosing an execution-cost model
+
+Let $hat(C)_i$ be predicted cost and $e_i=C_i-hat(C)_i$ the residual. A zero
+unconditional residual mean is weak evidence because positive and negative
+errors can cancel across regimes.
+
+Inspect conditional residual means and quantiles against:
+
+- requested size divided by forecast volume or displayed depth;
+- intended participation and urgency;
+- spread, volatility, depth, turnover, and order-flow state;
+- start time, duration, benchmark, and proximity to auctions;
+- symbol, sector, venue, client objective, and algorithm version; and
+- futures expiry, days to roll, and migration of liquidity across contracts.
+
+Each pattern suggests a different next question. Curvature against size points
+toward functional-form error. Underestimation at high participation may reflect
+missing speed dependence or endogenous urgency. Errors near futures rolls can
+come from changing contract liquidity, inappropriate continuous-series data, or
+an exposure normalization that ignores multipliers. Lower residual cost near
+the close may reflect volume and replenishment, selected order mix, auction
+access, or a benchmark tied mechanically to the close.
+
+#takeaway[
+  TCA closes the learning loop only when it changes a model or a decision. The
+  important error is not necessarily the largest residual in the sample. It is
+  the error in a region where the controller changes participation, timing,
+  aggressiveness, or venue because it trusts the estimate.
+]
+
+== Revisit the opening example
+
+The average price of \$50.08 can now be described without forcing one verdict.
 
 #table(
-  columns: (0.95fr, 1.1fr, 1.55fr),
+  columns: (1.05fr, 0.8fr, 0.8fr, 1.55fr),
   inset: 5pt,
   stroke: 0.5pt + rgb("d9dde2"),
   fill: (x, y) => if y == 0 { rgb("eef5fb") },
-  [*Field*], [*Timestamp*], [*Question*],
-  [feature time], [when value became knowable], [Could the live policy have used it?],
-  [decision time], [when action was selected], [Does the feature precede treatment?],
-  [event time], [exchange or normalized market time], [Are feeds synchronized?],
-  [label horizon], [when outcome is complete], [Do train/test labels overlap?],
-  [revision time], [when corrected data arrived], [Is research using a later revision?],
+  [*Benchmark*], [*Price*], [*Filled cost*], [*Interpretation*],
+  [Arrival mid], [\$50.00], [+16.0 bps], [Cost after the algorithm received control],
+  [Interval VWAP], [\$50.06], [+4.0 bps], [Performance versus realized market volume],
+  [Close], [\$50.12], [-8.0 bps], [Acquisition below terminal valuation],
+  [Residual mark], [\$50.15], [+16.28 bps IS], [Arrival shortfall including 8,000 unfilled shares],
 )
 
-Parent orders should be assigned wholly to train, validation, or test. Temporal
-splits better represent deployment than random row splits. Purge overlapping
-label windows when neighboring samples share future returns, and fit all
-normalizers, encoders, clusters, and feature selectors inside the training fold.
+The order paid above arrival but below the close. It slightly underperformed
+VWAP. Its unfilled shares became more expensive before the deadline. A client
+who requested arrival-cost minimization, a manager benchmarked to the close,
+and a researcher estimating mechanical market impact would legitimately focus
+on different parts of this description.
 
-== Modeling cost distributions
-
-The conditional mean is often insufficient. A schedule may reduce average cost
-while worsening the right tail. Useful targets include
-
-$
-  E[C|X], quad "median"(C|X), quad Q_tau(C|X), quad P(C>c|X).
-$
-
-Quantile regression, distributional models, or conformal prediction can
-describe conditional uncertainty. Evaluation should include:
-
-- calibration of intervals or quantiles;
-- error by size, participation, spread, volatility, liquidity, side, and time;
-- stability across symbols, dates, and regime shifts;
-- economic loss under the downstream optimizer; and
-- sensitivity to benchmark and markout horizon.
-
-A low mean-squared error can coexist with systematically underestimated large-
-order cost—the exact region most important for control.
-
-== From TCA to model diagnosis
-
-Residual analysis should ask structured economic questions. Let
-$e_i=C_i-hat(C)_i$. Plot or tabulate conditional residual means and quantiles
-against:
-
-- order size as a fraction of forecast ADV or depth;
-- intended and realized participation;
-- spread, volatility, volume, and order-flow imbalance;
-- duration and time of day;
-- sector, product, symbol liquidity, and futures roll proximity;
-- client objective and benchmark; and
-- market regime.
-
-Patterns imply different failures. Residual curvature versus participation
-suggests functional-form error. Bias near rolls suggests a missing regime or
-contract-liquidity variable. Intraday structure after controlling for liquidity
-could indicate participant mix, benchmark incentives, or selection.
-
-#takeaway[
-  TCA should close the control loop. The question is not merely whether average
-  residual is zero, but whether errors are concentrated where the optimizer
-  changes speed. Evaluate model error weighted by policy sensitivity.
-]
+The correct next step is not to average the benchmarks. It is to return to the
+instruction, identify the intended objective, and compare the policy with a
+credible alternative under the same order and market state.
 
 == Interview checks
 
 #interview[
-  *Algorithm B has 2 bps lower average arrival shortfall than A. What do you ask
-  before declaring B better?* Cover assignment, order mix, benchmark, completion,
-  weighting, uncertainty, overlap, tails, and interference.
+  *Algorithm B has 2 basis points lower average arrival shortfall than Algorithm
+  A. What must be checked before calling B better?* Discuss assignment, order
+  mix, benchmark construction, completion, weighting, uncertainty, overlap,
+  tails, policy changes, and interference.
 ]
 
 #interview[
-  *Why should parent orders—not child fills—usually define the train/test split?*
-  Explain shared latent intent, market path, policy adaptation, and label
-  leakage.
+  *An order loses 12 basis points to arrival but beats VWAP by 3 basis points.
+  Is that inconsistent?* Explain how a rising path and the market-volume profile
+  can make both statements true, and state which objective each metric serves.
 ]
 
 #interview[
-  *Your model underestimates cost near futures rolls. What are plausible causes?*
-  Discuss migration between contracts, changing depth/volume denominators,
-  spread and volatility, sample support, contract identity, and participant mix.
+  *Why can a passive algorithm look excellent when analysis includes only
+  completed orders?* Explain selection into fills, missing expensive residuals,
+  catch-up trading, and the need to measure completion jointly with cost.
+]
+
+#interview[
+  *Why is contemporaneous-mid cost not the same as market impact?* Earlier
+  child orders may already have moved the mid, while public information and
+  other order flow can move it independently of the program.
 ]
 
 == Exercises
 
-1. Derive the relation between equal-order and notional-weighted average cost.
-   Construct a two-order example in which they rank two algorithms oppositely.
-2. Design an A/B test for two POV controllers. Specify the randomization unit,
-   primary metric, guardrails, stratification variables, and interference check.
-3. Build a causal graph containing urgency, alpha, intended participation,
-   realized participation, market movement, and shortfall. Explain why realized
-   duration can be a bad control.
-4. Given repeated orders across 100 symbols and 40 dates, propose two uncertainty
-   estimates and state what dependence each preserves.
+1. For a 200,000-share sell, 180,000 shares fill at \$74.90 and 20,000 remain at
+   a \$74.70 deadline mark. The arrival mid is \$75.00. Compute filled-quantity
+   cost and completion-adjusted implementation shortfall in dollars, cents per
+   requested share, and basis points.
+2. Construct a two-order example in which equal-order and notional-weighted mean
+   costs rank two algorithms oppositely. Explain which estimand each average
+   represents.
+3. Create a five-bucket price and market-volume path for which an execution beats
+   VWAP but misses TWAP. Then reverse the volume pattern and explain the change.
+4. Draw a causal graph containing latent urgency, assigned policy, intended
+   participation, realized participation, price movement, completion, and
+   shortfall. Identify variables that are unsafe to control for in a total-policy
+   comparison.
+5. Design an A/B test for two participation controllers. Specify randomization
+   unit, stratification, primary cost metric, completion guardrail, tail metric,
+   interference check, and uncertainty estimator.
+6. Define a TCA specification for a close-benchmarked order that can access the
+   closing auction. State how auction fills, continuous fills, unfilled shares,
+   explicit fees, and late corrections enter the measure.
+7. A model's unconditional residual mean is zero, but it underestimates the
+   largest decile of orders by 9 basis points. Explain why this matters to an
+   optimizer and propose a diagnostic sequence.
+
+== Where the book goes next
+
+This chapter has defined what an execution outcome means. Part II turns to the
+research process that learns from those outcomes. Chapter 4 begins before model
+fitting: it asks how to translate a market phenomenon into an estimand, a data-
+generating story, a validation design, and a sequence of informative models.

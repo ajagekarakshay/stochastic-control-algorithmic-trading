@@ -68,8 +68,9 @@ This is the working architecture of the book. It is intentionally more
 detailed than a conventional table of contents: it records the question each
 chapter should answer and the subjects that belong there before prose is
 written. A linked title opens material already in the manuscript. Entries
-marked *Source draft* point to an early combined chapter that will later be
-split and rewritten to match the approved structure.
+marked *Source draft* have early material retained in the repository, but are
+not linked into the book until that material is split and rewritten to match
+the approved structure.
 
 #roadmap-part(
   [Part I - Understanding the execution problem],
@@ -100,7 +101,7 @@ split and rewritten to match the approved structure.
   [Defines the outcomes that execution research tries to explain and shows why the benchmark determines the economic question.],
   [Arrival-price implementation shortfall; VWAP, TWAP, close, and interval benchmarks; spread cost; timing risk; impact; opportunity cost; markouts; partial fills and unfinished orders; realized versus expected cost; cost decomposition; counterfactual interpretation; transaction-cost analysis.],
   target: <ch-tca>,
-  status: [Working draft],
+  status: [First draft],
 )
 
 #roadmap-part(
@@ -114,23 +115,25 @@ split and rewritten to match the approved structure.
   [Explains how to move from an observed market phenomenon to a model that can support an explanation, forecast, or decision.],
   [Research-question formation; the phenomenon, population, observational unit, target, and estimand; data-generating stories; prediction, explanation, causal estimation, and control; information available at decision time; data contracts; noisy labels; feature mechanisms and invariances; validation design; model ladders; bias, variance, and irreducible noise; learning curves; residual analysis; uncertainty; extrapolation; distribution shift; decision-aware evaluation; research logs and synthetic experiments.],
   target: <ch-modeling-research>,
-  status: [Working draft],
+  status: [First draft],
 )
 
 #roadmap-entry(
   5,
   [Execution Data: From Market Events to Research Tables],
   [Shows how orders, fills, quotes, and trades become a trustworthy research dataset without losing their timing or economic meaning.],
-  [Order, fill, quote, trade, and depth records; parent-order reconstruction; event alignment and quote matching; timestamps and clock synchronization; sampling frequency; stale observations; missingness; cancellations and incomplete orders; censoring; corporate actions; futures rolls and symbol changes; live versus corrected reference data; leakage-safe joins; reproducible research tables.],
+  [Order, fill, quote, trade, and depth records; entity keys and order lifecycles; sequence numbers and book replay; parent-order reconstruction; event alignment and latency-aware quote matching; timestamps and clock synchronization; calendar, event, and volume-time sampling; stale observations; missingness; cancellations and censored fills; corporate actions and effective-dated reference data; futures rolls and exact contract identity; live versus corrected data; leakage-safe joins; data lineage, reconciliation, and reproducible research tables.],
+  target: <ch-execution-data>,
+  status: [First draft],
 )
 
 #roadmap-entry(
   6,
   [The Empirical Shape of Market Impact],
   [Describes the regularities seen in execution data before imposing a particular functional form or causal interpretation.],
-  [Temporary, permanent, and transient impact; signed volume; order size, participation, and duration; concavity and square-root behavior; impact trajectories during an order; post-trade decay; spread, volatility, depth, and liquidity dependence; time-of-day effects; market regimes; cross-sectional variation; differences among equities, futures, options, and less-liquid products.],
-  target: <ch-impact>,
-  status: [Source draft],
+  [Signed response and the missing no-trade path; child-order and parent-order scales; clock and quantity-progress trajectories; order size, intended and realized participation, and duration; concavity and square-root behavior; average, total, and marginal cost; temporary, transient, and permanent horizons; pauses, resilience, and post-trade decay; mechanical and informational response; volatility, spread, depth, and volume normalization; time-of-day effects; regimes and cross-sectional collapse; equities, futures, options, and less-liquid products; futures rolls; exploratory surface diagnostics; translation from empirical regularity to control input.],
+  target: <ch-impact-empirical>,
+  status: [First draft],
 )
 
 #roadmap-entry(
@@ -138,7 +141,6 @@ split and rewritten to match the approved structure.
   [Estimating Market Impact],
   [Develops statistical methods for estimating impact while being explicit about selection, endogeneity, uncertainty, and model use.],
   [Parametric and nonparametric specifications; log-log models; nonlinear and constrained regression; heteroskedasticity and heavy tails; hierarchical shrinkage; interactions and segmentation; metaorder reconstruction; endogenous participation and duration; latent urgency; confounding and selection; measurement error; causal designs; uncertainty intervals; stability; residual diagnostics; policy sensitivity.],
-  target: <ch-impact>,
   status: [Source draft],
 )
 
@@ -159,7 +161,6 @@ split and rewritten to match the approved structure.
   [Classical Optimal Liquidation],
   [Derives the basic cost-risk trade-off and uses it to explain the shape of an optimal liquidation schedule.],
   [Discrete and continuous inventory dynamics; temporary impact; price risk; Bertsimas-Lo; Almgren-Chriss; expected cost and variance; the execution frontier; risk aversion and urgency; boundary conditions; closed-form trajectories; calibration; units and limiting cases; when the classical assumptions fail.],
-  target: <ch-optimal-execution>,
   status: [Source draft],
 )
 
@@ -168,7 +169,6 @@ split and rewritten to match the approved structure.
   [Volume Time, VWAP, and Participation Strategies],
   [Connects optimal liquidation to the schedules and constraints used by practical execution algorithms.],
   [Calendar time and volume time; TWAP and VWAP schedules; constant and time-varying POV; uncertain future volume; participation caps and floors; completion constraints; catch-up logic near deadlines; benchmark-aware control; realized versus intended participation; interaction among impact, volume forecasts, and alpha decay.],
-  target: <ch-optimal-execution>,
   status: [Source draft],
 )
 

@@ -20,8 +20,9 @@ The book follows one recurring loop:
    flow, microprice, adverse selection, hidden liquidity, resilience, market
    clocks, seasonality, routing, dark liquidity, and auctions.
 3. **What Does an Execution Cost?** - Arrival shortfall, VWAP, TWAP, close and
-   interval benchmarks, spread cost, timing risk, impact, markouts, partial
-   fills, opportunity cost, counterfactuals, and TCA.
+   interval benchmarks, decision-to-arrival delay, spread and timing cost,
+   markouts, partial fills, opportunity cost, cost distributions, aggregation,
+   causal policy comparisons, uncertainty, and TCA diagnostics.
 
 ## Part II - Learning from execution data
 
@@ -30,12 +31,15 @@ The book follows one recurring loop:
    data contracts, label noise, features, validation, bias and variance,
    residuals, uncertainty, distribution shift, and decision-aware evaluation.
 5. **Execution Data: From Market Events to Research Tables** - Orders, fills,
-   quotes, trades, depth, event alignment, timestamps, parent-order
-   reconstruction, missingness, censoring, corrections, rolls, and
-   leakage-safe joins.
+   quotes, trades, depth, identifiers, lifecycle reconstruction, sequence gaps,
+   book replay, clocks, event alignment, stale observations, parent-order
+   reconstruction, missingness, censoring, corrections, futures rolls,
+   leakage-safe joins, lineage, and reconciliation.
 6. **The Empirical Shape of Market Impact** - Temporary, permanent, and
-   transient impact, size, participation, duration, concavity, square-root
-   behavior, impact paths, decay, liquidity dependence, and regimes.
+   transient response; child and parent scales; size, intended and realized
+   participation, duration, concavity, square-root behavior, impact paths,
+   pauses, decay, liquidity normalization, time-of-day effects, regimes,
+   cross-sectional scaling, and product differences.
 7. **Estimating Market Impact** - Parametric and nonparametric models,
    nonlinear estimation, heteroskedasticity, hierarchical shrinkage,
    endogeneity, confounding, selection, uncertainty, diagnostics, and policy
@@ -120,8 +124,8 @@ F. Statistical inference, regularization, and causal estimation
 G. Time-series and event-data methods
 H. Notation, units, and dimensional analysis
 
-## Writing order
+## Writing progress
 
-The main book is developed one chapter at a time. Part I comes first:
-Chapter 1, then Chapter 2, then Chapter 3. Each chapter is discussed against
-the skeleton before its working draft is rewritten.
+Chapters 1 through 6 are first drafts. Future chapters remain detailed skeleton
+entries or retained source drafts until they are rewritten against the approved
+architecture.
