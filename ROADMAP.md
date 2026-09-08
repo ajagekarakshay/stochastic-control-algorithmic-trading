@@ -44,9 +44,11 @@ The book follows one recurring loop:
    nonlinear estimation, heteroskedasticity, hierarchical shrinkage,
    endogeneity, confounding, selection, uncertainty, diagnostics, and policy
    sensitivity.
-8. **Modeling the State of Liquidity** - Volume, spread, volatility, depth,
-   imbalance, point processes, latent state, regimes, probabilistic forecasts,
-   calibration, scenarios, and drift.
+8. **Short-Horizon Forecasting and Liquidity State** - Remaining-volume
+   distributions, spread and depth transitions, volatility, imbalance,
+   microprice, order flow, multi-horizon price and markout forecasts, fill
+   probability and adverse selection, point processes, latent state, regimes,
+   probabilistic calibration, forecast value for control, drift, and fallback.
 
 ## Part III - From estimated models to execution policies
 
@@ -126,6 +128,6 @@ H. Notation, units, and dimensional analysis
 
 ## Writing progress
 
-Chapters 1 through 6 are first drafts. Future chapters remain detailed skeleton
-entries or retained source drafts until they are rewritten against the approved
-architecture.
+Chapters 1 through 8, Chapter 16, and Chapter 24 are first drafts. Future
+chapters remain detailed skeleton entries or retained source drafts until they
+are rewritten against the approved architecture.

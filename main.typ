@@ -34,7 +34,22 @@
 #chapter-nav(<book-chapter-index>, previous-target: <ch-modeling-research>, next-target: <ch-impact-empirical>)
 
 #include "chapters/05-impact-empirical.typ"
-#chapter-nav(<book-chapter-index>, previous-target: <ch-execution-data>)
+#chapter-nav(<book-chapter-index>, previous-target: <ch-execution-data>, next-target: <ch-impact-estimation>)
+
+#include "chapters/06-impact-estimation.typ"
+#chapter-nav(<book-chapter-index>, previous-target: <ch-impact-empirical>, next-target: <ch-liquidity-state>)
+
+#include "chapters/07-liquidity-forecasting.typ"
+#chapter-nav(<book-chapter-index>, previous-target: <ch-impact-estimation>, next-target: <ch-policy-evaluation>)
+
+#counter(heading).update(15)
+#include "chapters/15-policy-evaluation.typ"
+#chapter-nav(<book-chapter-index>, previous-target: <ch-liquidity-state>, next-target: <ch-production-research>)
+
+#counter(heading).update(23)
+#include "chapters/23-production-research.typ"
+#chapter-nav(<book-chapter-index>, previous-target: <ch-policy-evaluation>)
 
 #pagebreak()
+#set text(size: 9pt)
 #bibliography("references.bib", title: [References], style: "ieee")

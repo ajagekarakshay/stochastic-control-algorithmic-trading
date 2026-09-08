@@ -1,0 +1,646 @@
+#import "../style.typ": intuition, interview, research, takeaway, definition
+
+= From Research Question to Production Model <ch-production-research>
+
+Execution research is finished only when a decision can use it safely and the
+result can be measured afterward. A notebook that fits a convincing impact curve
+is not yet an impact model. A serialized predictor behind an endpoint is not yet
+a trading system. The production object includes the question, data definitions,
+feature timestamps, fitted parameters, policy translation, safeguards,
+monitoring, ownership, and evidence supporting release.
+
+This chapter follows one model through that entire path. The example is a
+pre-trade market-impact model used to choose a participation schedule, but the
+workflow also applies to volume forecasts, passive-fill models, venue scoring,
+and short-horizon alpha. The central theme is traceability: for any live action,
+we should be able to reconstruct which information, model, policy version, and
+constraints produced it.
+
+== Start with the decision, not the model request
+
+“Improve the impact model” is not a research question. It names a component but
+not the decision that component should improve. A useful problem statement
+contains:
+
+- the decision maker and decision time;
+- the eligible order population;
+- the candidate actions;
+- the economic objective and constraints;
+- the information available at the decision;
+- the present baseline and its failure mode; and
+- the evidence required to change production behavior.
+
+For example:
+
+> At parent-order arrival, choose an initial participation band for outright
+> futures orders so as to reduce expected arrival shortfall plus inventory risk,
+> subject to client limits and terminal completion. Improve persistent
+> underestimation for illiquid contracts and roll periods without degrading
+> calibration for liquid non-roll orders.
+
+This statement makes the model subordinate to a decision. It says where the
+current system fails, which population matters, and what must not regress. It
+also suggests the research units, features, validation slices, and policy tests.
+
+=== Write the loss in economic terms
+
+Let $pi$ be an execution policy, $omega$ a realized market path, $C(pi; omega)$
+execution cost, $R(pi; omega)$ inventory risk, and $G(pi; omega)$ constraint or
+non-completion penalties. Define
+
+$
+  J(pi; omega)
+  = C(pi; omega) + lambda R(pi; omega) + G(pi; omega).
+$
+
+The research goal is not necessarily to minimize model RMSE. It is to reduce
+
+$
+  E lr([J(pi; omega)])
+$
+
+for the target population while satisfying hard limits. The model loss is a
+proxy whose connection to $J$ must be tested. If the optimizer uses the gradient
+of predicted impact, validation must include gradients and induced actions. If
+the policy uses a 90th percentile of remaining volume, mean-volume RMSE is not
+the primary criterion.
+
+#intuition[
+  A production model is an instrument inside a decision system. Judging it only
+  by prediction error is like judging a speedometer by the beauty of its dial
+  while ignoring whether it helps the driver brake in time.
+]
+
+== Create a research contract
+
+Before exploratory work becomes elaborate, write a short versioned contract.
+It should specify:
+
+1. *Population:* instruments, order types, dates, sessions, and exclusions.
+2. *Observation:* parent order, child order, event interval, or symbol-day.
+3. *Target:* formula, benchmark, sign, units, horizon, and missingness handling.
+4. *Features:* economic meaning and latest permissible timestamp.
+5. *Validation:* chronological splits, grouping, slices, and untouched test set.
+6. *Baseline:* current production model and simple statistical alternatives.
+7. *Acceptance:* statistical, policy, latency, and safety thresholds.
+8. *Experiment:* how live causal improvement will be established.
+
+The contract is not meant to prevent learning. Exploratory analysis will change
+the question. When it does, record the change and reserve new confirmation data.
+Without this discipline, repeated inspection of the test period turns it into
+training data through human judgment.
+
+=== Separate exploratory and confirmatory work
+
+Exploration asks what might be happening: perhaps costs rise near futures rolls,
+or late-day slippage is unexpectedly low. It uses plots, alternative targets,
+segmentations, and flexible models to generate explanations. Confirmatory work
+asks whether a specific relationship survives a predeclared test.
+
+Both are valuable. The problem is presenting a relationship discovered after
+many searches as if it had been the original hypothesis. Use a research log that
+records the question, data snapshot, code commit, result, interpretation, and
+next test. A hypothesis discovered in period $A$ can be confirmed in period $B$
+or through a prospective experiment.
+
+== Build the simplest complete baseline
+
+A baseline should exercise the entire path from raw data to policy action. For an
+impact-driven participation selector, a strong first baseline may be a
+square-root cost curve with volatility and spread adjustment, combined with the
+existing optimizer and constraints. It is preferable to a more accurate model
+that cannot yet be translated into a feasible action.
+
+Maintain several baselines:
+
+- a *measurement baseline*, such as mean cost by size and liquidity bucket;
+- a *predictive baseline*, such as linear or square-root impact;
+- a *policy baseline*, such as the currently deployed schedule; and
+- a *safety baseline*, such as a conservative fixed participation rule.
+
+These have different jobs. The predictive baseline diagnoses whether complexity
+adds forecast information. The policy baseline measures practical improvement.
+The safety baseline is the fallback when the model or data are unavailable.
+
+Every proposed feature and model carries a maintenance cost: data dependencies,
+latency, tests, monitoring, and failure modes. Production ML literature describes
+how these dependencies create technical debt that is invisible in offline model
+scores @sculley2015. A small gain from a fragile feature may not survive its
+operational cost.
+
+== Make data identity explicit
+
+A reproducible experiment needs an immutable description of its data, not a
+query whose results change when upstream tables are corrected. A dataset version
+should record:
+
+- raw source versions or partitions;
+- extraction time and correction policy;
+- parent-order reconstruction and exclusion rules;
+- corporate-action, symbology, and futures-contract mappings;
+- time zones, sessions, and clock corrections;
+- feature definitions and availability timestamps;
+- target and benchmark definitions; and
+- checksums, row counts, and reconciliation totals.
+
+Let dataset identifier $D$ be a function of these inputs:
+
+$
+  D = H("sources", "query", "definitions", "as-of time"),
+$
+
+where $H$ is a content or metadata hash. The exact implementation can vary; the
+principle is that a future researcher can reconstruct what the identifier means.
+
+The same parent order may appear differently in live and corrected histories.
+Store both when needed. Production replay should use information as it was
+available, while reconciliation and accounting may use corrected records. A
+model trained on corrected quote timestamps but served on delayed live quotes
+experiences training-serving skew even if the column names match.
+
+=== A feature is a timed contract
+
+For feature $x_j$, document
+
+$
+  ("name", "meaning", "unit", "event time", "availability time",
+  "missing rule", "valid range").
+$
+
+Event time says when the market fact occurred. Availability time says when the
+strategy could know it. The latter determines admissibility. A rolling
+volatility feature computed at $t$ must use returns ending no later than the
+production cutoff, including realistic feed and computation delay.
+
+Feature parity should be tested on identical replayed events. If
+$x_j^"research" (t)$ and $x_j^"live" (t)$ are the two implementations, monitor
+
+$
+  Delta x_j (t) = x_j^"live" (t) - x_j^"research" (t).
+$
+
+Exact equality may be required for identifiers and categorical state. Numerical
+features need tolerances justified by precision and timing. Aggregate
+distribution similarity cannot detect a feature that is wrong on the individual
+orders driving decisions.
+
+== Reproducible experiments are dependency graphs
+
+A research result depends on code, data, configuration, randomness, and the
+runtime environment. Record at least:
+
+- source-control commit;
+- dataset identifier;
+- feature and target schema versions;
+- train, validation, and test windows;
+- random seeds and resampling units;
+- model class, parameters, and library versions;
+- optimization tolerances and convergence diagnostics; and
+- all produced metrics, plots, and artifacts.
+
+An experiment identifier can be represented as
+
+$
+  E = H(D, C, F, M, S),
+$
+
+where $D$ is data, $C$ code, $F$ feature configuration, $M$ model
+configuration, and $S$ stochastic state. Re-running $E$ should reproduce results
+within declared numerical tolerance.
+
+Reproducibility is not the same as validity. A perfectly reproducible leakage
+bug is still a bug. The benefit is diagnostic: when results change, the team can
+identify which dependency changed.
+
+== Validation gates before policy translation
+
+A candidate model should pass increasingly decision-relevant gates.
+
+=== Data and target gates
+
+- schema, ranges, units, nulls, timestamps, and uniqueness;
+- order/fill reconciliation and completion accounting;
+- no future information in pre-trade features;
+- correct contract and corporate-action identity; and
+- stable sample counts by eligibility and exclusion reason.
+
+=== Statistical gates
+
+- improvement over simple baselines on future data;
+- calibration and uncertainty by important slice;
+- stability across time, symbols, products, and regimes;
+- residual maps over size, speed, volatility, spread, and time;
+- support and extrapolation diagnostics; and
+- sensitivity to weighting, loss, and reasonable data definitions.
+
+=== Economic-shape gates
+
+- signs, monotonicity, curvature, and limiting cases;
+- reasonable behavior at zero size and action bounds;
+- smooth marginal costs where an optimizer differentiates;
+- unit consistency under changes of shares, contracts, and notional; and
+- no economically impossible or manipulation-prone response.
+
+=== Operational gates
+
+- inference latency and throughput;
+- memory and dependency availability;
+- deterministic serialization and compatibility;
+- missing, stale, and extreme input behavior;
+- shadow-replay parity; and
+- tested fallback and rollback.
+
+Production-readiness frameworks emphasize that data, model, infrastructure, and
+monitoring tests are all necessary; a good offline score covers only one part of
+the system @breck2017.
+
+#research[
+  A release gate should reject a candidate automatically when a hard invariant
+  fails. A slide saying “the issue is probably harmless” is not a substitute for
+  a versioned exception with an owner and expiry.
+]
+
+== Translate predictions into policy behavior
+
+Suppose model version $m$ produces an impact surface
+
+$
+  hat(C)_m (a, z),
+$
+
+for action $a$ and state $z$. The optimizer chooses
+
+$
+  a_m^*(z)
+  = arg min_(a in cal(A)(z)) lr(
+      hat(C)_m (a, z) + hat(R)(a, z) + G(a, z)
+    ),
+$
+
+where $cal(A)(z)$ is the feasible set, $hat(R)$ predicted risk, and $G$ explicit
+penalties. This mapping can magnify small model changes near an action boundary.
+Therefore compare models in action space as well as prediction space.
+
+Useful policy diagnostics include:
+
+- fraction of orders whose initial action changes;
+- distribution and maximum size of the change;
+- action changes by size, liquidity, regime, and support;
+- constraint activity and emergency completion rates;
+- sensitivity to small feature or parameter perturbations; and
+- expected objective difference under common scenarios.
+
+Define local action sensitivity to feature $z_j$ where the derivative exists:
+
+$
+  K_j (z) = partial a_m^* (z) / partial z_j.
+$
+
+A large $K_j$ may reflect genuine economics or an unstable optimizer. If the
+action is discrete, perturb $z_j$ and measure transition probabilities instead.
+Use smoothing, regularization, hysteresis, or robust optimization when estimation
+noise produces excessive action turnover.
+
+=== Uncertainty must change behavior to matter
+
+Suppose the model supplies predictive mean $hat(mu)(a,z)$ and standard deviation
+$hat(sigma)(a,z)$. A conservative policy might use
+
+$
+  hat(C)_"robust" (a,z)
+  = hat(mu)(a,z) + kappa hat(sigma)(a,z),
+$
+
+with $kappa >= 0$. This is useful only if uncertainty is calibrated and the sign
+matches the decision. In some states uncertainty should discourage aggressive
+extrapolation; near a hard deadline it may instead trigger earlier completion.
+Document how intervals, support flags, or regime probabilities affect actions.
+“The model reports confidence” is not operational behavior.
+
+== Design the model-engine interface
+
+The interface between research and execution should be small, typed, and
+versioned. Inputs need names, types, units, timestamp semantics, valid ranges,
+and missingness rules. Outputs need the same, plus uncertainty and support.
+
+For an impact model, a response may contain:
+
+- expected cost for each candidate action;
+- marginal or incremental cost;
+- prediction quantiles;
+- support or extrapolation flag;
+- model and feature-schema versions;
+- inference timestamp and data age; and
+- status code explaining fallback.
+
+Never use a silent default for an economically important missing feature. A zero
+spread, zero volatility, or zero depth can be a plausible numeric value with an
+implausible meaning. Missingness should be represented separately and routed to
+a defined fallback.
+
+Latency belongs in the model definition. Let $t_e$ be the latest event time used,
+$t_a$ the time the action reaches the venue, and
+
+$
+  L = t_a - t_e.
+$
+
+Backtests should apply the same latency distribution or a conservative bound.
+A microprice signal that decays within 20 milliseconds is unusable if end-to-end
+$L$ is 50 milliseconds, regardless of offline accuracy.
+
+Model packages should be immutable. Store parameters, transformations, schemas,
+training metadata, and a compatibility version together. The runtime should
+refuse incompatible combinations rather than guess how to interpret them.
+
+== Shadow mode, replay, and canary release
+
+Before a candidate controls orders, replay historical event streams through the
+actual production feature and inference path. Compare output with the research
+implementation at identical forecast origins. Replay tests timing, state reset,
+late messages, missing data, and sequence gaps in a way a static table cannot.
+
+Shadow mode then runs the candidate on live data without sending its actions.
+Measure:
+
+- feature parity and freshness;
+- inference latency and error rate;
+- state and action distributions;
+- disagreement with the baseline;
+- frequency of unsupported states; and
+- reasons constraints override the candidate.
+
+Shadow outcomes are counterfactual. If the candidate would have traded
+differently, the observed market path followed the baseline's actions. Shadow
+mode is excellent for operational validation and action inspection, but it does
+not establish policy value for market-moving decisions.
+
+A canary release allocates a small randomized fraction of eligible live flow.
+Chapter 16's experimental design applies. Promotion should require both safety
+and economic evidence; an absence of incidents in a small sample is not proof of
+tail safety.
+
+== Monitor the system in layers
+
+A single dashboard of average prediction error detects problems late and explains
+little. Monitor four connected layers.
+
+=== Data health
+
+Track availability, delay, staleness, missingness, range, category membership,
+sequence gaps, and reconciliation. Compare live distributions with both training
+and recent production baselines. Alert on changes in semantics and upstream
+versions, not only statistical drift.
+
+=== Model behavior
+
+Track prediction mean and dispersion, interval width, calibration when labels
+arrive, support flags, residuals, and performance by important slice. Monitor
+parameter or feature-contribution changes for debugging, not as substitutes for
+outcome quality.
+
+For continuous feature $X$, a population-stability-style diagnostic partitions
+values into bins $B_k$ and compares reference proportions $p_k$ with current
+proportions $q_k$:
+
+$
+  "PSI" = sum_k (q_k - p_k) log(q_k / p_k).
+$
+
+This is a descriptive alarm, not a universal statistical test. Its value depends
+on stable bins, sample size, and relation to policy behavior. Complement it with
+domain-specific checks such as exact-contract mix, roll status, spread ticks,
+and forecast age.
+
+=== Policy behavior
+
+Track participation, urgency changes, passive share, cancellation rate, venue
+mix, constraint activation, overrides, fallback use, and completion. A model can
+have stable predictions while a changed optimizer maps them to very different
+actions.
+
+=== Economic outcomes
+
+Track benchmark-relative cost, markouts, opportunity cost, tail loss, and the
+randomized policy contrast where possible. Slice by the same dimensions used in
+validation. Outcome labels arrive at different delays, so the monitoring system
+must distinguish immediate operational evidence from later economic evidence.
+
+An alert needs an owner, severity, response, and recovery condition. Dashboards
+without decision rules become background decoration.
+
+== Drift, retraining, and recalibration
+
+Three changes are often called drift:
+
+1. $P(X)$ changes: the population of orders or market states moves.
+2. $P(Y | X)$ changes: the conditional relationship changes.
+3. The policy changes: actions alter the data-generating process.
+
+The remedy differs. Covariate shift may require reweighting or revised support.
+Conditional shift may require new features or refitting. A policy change may
+require fresh exploration because action-outcome support has moved.
+
+Scheduled retraining is simple but can replace a stable model with one fitted to
+a small anomalous window. Trigger-based retraining can overreact to noisy
+alarms. A robust process separates:
+
+- *data refresh*, which rebuilds the training sample;
+- *candidate training*, which does not imply promotion;
+- *offline validation*, including comparison with the incumbent;
+- *shadow and canary evaluation*; and
+- *release approval* under versioned criteria.
+
+Recalibration may be enough when rankings remain useful but levels drift. For
+example, a monotone mapping can correct predicted cost quantiles without
+replacing the entire surface. Investigate the mechanism before choosing the
+smallest safe intervention.
+
+== Governance and model risk
+
+Governance should make responsibility explicit without turning research into a
+paper exercise. A model record should include:
+
+- owner and backup owner;
+- intended use and prohibited use;
+- training population and support;
+- target, features, and model version;
+- assumptions and known failure modes;
+- validation and experiment evidence;
+- limits, fallback, and rollback procedure;
+- monitoring metrics and thresholds;
+- review and expiry dates; and
+- approvals and material changes.
+
+A material change includes more than new coefficients. Changing a benchmark,
+volume denominator, feature timestamp, eligibility rule, optimizer objective, or
+fallback can alter behavior even if the model class is unchanged.
+
+Independent review should try to falsify the claim. Reproduce the main result,
+inspect leakage and exclusions, test alternative definitions, examine support,
+and perturb the downstream policy. The reviewer need not build a competing model
+to add value.
+
+== Rollback is a designed capability
+
+A rollback plan names an exact safe version, verifies compatibility with current
+schemas, and has been exercised. Keep the baseline available and its dependencies
+healthy. If the new model changes action-space or state definitions, rolling back
+only the parameter file may not restore the old behavior.
+
+Triggers can include data corruption, latency breach, unsupported-state surge,
+constraint violations, completion failure, extreme cost, or statistically
+credible economic degradation. Some require immediate automated fallback;
+others require human review. Log the trigger and every affected order so that
+the incident can be reconstructed.
+
+After rollback, avoid training immediately on corrupted or policy-transition
+data. First establish the incident window, affected features, and valid
+population. A model refresh cannot repair a broken feed contract.
+
+== Communicating with traders and engineers
+
+Different collaborators need different views of the same model.
+
+For traders, explain the behavior:
+
+- which orders change;
+- in what market states the policy becomes faster, slower, more passive, or more
+  aggressive;
+- expected cost and risk tradeoffs;
+- uncertainty and cases where the model abstains; and
+- what live evidence would reverse the conclusion.
+
+For engineers, specify the contract:
+
+- exact inputs, timestamps, units, and valid ranges;
+- state-update order and latency budget;
+- deterministic transformations and model package;
+- constraints, failure codes, fallback, and logging; and
+- replay cases and acceptance tests.
+
+For model reviewers, show the evidence:
+
+- estimand and identification assumptions;
+- data lineage and split design;
+- baselines, residuals, uncertainty, and sensitivity;
+- policy translation and support;
+- experiment results; and
+- monitoring and governance.
+
+Avoid saying “the model learned that close-period orders are cheaper.” Say what
+was observed, conditioned on, and tested: “In future held-out data, predicted
+arrival shortfall was lower in the final hour after adjustment for the listed
+pre-trade variables; support was weak for the largest illiquid orders, so the
+policy does not apply the adjustment there.” Precision builds trust because it
+makes the boundary of the claim visible.
+
+#takeaway[
+  Good communication does not remove uncertainty. It states which uncertainty
+  matters, how it changes behavior, and what evidence will be collected next.
+]
+
+== A complete example: repairing roll-period underestimation
+
+Suppose the incumbent futures impact model underestimates cost near the roll,
+especially for less-liquid contracts.
+
+=== Question and mechanism
+
+The team hypothesizes that a continuous volume denominator hides liquidity
+migration between expiries. The same notional order represents different depth
+and participation depending on the exact contract and day relative to roll.
+
+=== Data and target
+
+Build a parent-order table preserving exact expiry, contract multiplier,
+front/next liquidity rank, days to expiry, spread, depth, forecast volume,
+realized volume, intended participation, completion, and arrival shortfall. Use
+only pre-trade volume forecasts for the live model; keep corrected volume for
+retrospective diagnostics.
+
+=== Baselines and candidates
+
+Compare the incumbent continuous-series model with:
+
+- the same form using exact-contract denominators;
+- a roll indicator and interactions;
+- a hierarchical model pooling by product and liquidity rank; and
+- a structural baseline plus residual correction.
+
+=== Validation
+
+Hold out future roll periods and entire products. Report calibration by days to
+roll, contract rank, size, intended participation, and liquidity. Examine
+marginal cost and induced schedules. Reject any candidate that improves roll
+orders by destabilizing ordinary liquid orders beyond the predeclared tolerance.
+
+=== Production translation
+
+Version the exact-contract mapping and define behavior when reference data are
+missing. Pass support and uncertainty to the optimizer. Cap changes in initial
+participation during the canary and preserve the incumbent fallback.
+
+=== Evaluation and monitoring
+
+Randomize eligible roll orders between incumbent and candidate within product,
+size, and liquidity strata. Measure total implementation shortfall, completion,
+tail cost, and mechanism variables. Monitor contract mapping, forecast volume,
+support, action changes, and economic outcomes through subsequent rolls.
+
+The final result is not merely a better coefficient. It is a traceable change
+from a market mechanism to a dataset, estimator, policy action, live experiment,
+and monitored production behavior.
+
+== Interview checks
+
+#interview[
+  *What is the difference between a research model and a production model?*
+  Discuss data and feature identity, serving latency, policy translation,
+  constraints, monitoring, ownership, fallback, and causal evaluation.
+]
+
+#interview[
+  *Offline RMSE improves by 8%, but only 0.2% of actions change. Would you deploy?*
+  Examine where decisions disagree, economic value, implementation cost, and
+  whether the unchanged policy means the improvement is irrelevant to control.
+]
+
+#interview[
+  *How do you detect training-serving skew?* Compare feature values at identical
+  replay origins, validate timestamps and revisions, monitor live differences,
+  and test the complete production path.
+]
+
+#interview[
+  *When should a model retrain?* Distinguish covariate, conditional, and
+  policy-induced change; require a candidate to beat the incumbent and pass
+  release gates rather than promoting every scheduled refresh.
+]
+
+== Exercises
+
+1. Write a research contract for a short-horizon alpha model that changes
+   passive-versus-aggressive choice. Define horizon, target, feature cutoff,
+   policy objective, baseline, and acceptance tests.
+2. Design a version identifier for an impact experiment. List every component
+   whose change should produce a new identifier.
+3. Create a feature-parity test for spread, volatility, imbalance, and forecast
+   volume. State which differences require exact equality and which need
+   tolerances.
+4. Given two impact models with similar cost predictions, design action-space
+   sensitivity tests for the participation optimizer.
+5. Propose monitoring and rollback thresholds for a model used near futures
+   rolls. Separate automatic safety triggers from slower economic review.
+6. Explain why shadow mode cannot establish the value of a policy whose actions
+   would materially alter the observed market path.
+7. Write three versions of the same result for a trader, engineer, and model-risk
+   reviewer without changing the underlying claim.
+
+== Where the book goes next
+
+The final chapter presents complete research studies. Its purpose is not to show
+frictionless success stories, but to expose the judgments this chapter has made
+explicit: revising a target, discovering weak support, rejecting an attractive
+model, separating prediction from causality, and carrying uncertainty into a
+live decision.

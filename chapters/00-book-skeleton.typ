@@ -141,14 +141,17 @@ the approved structure.
   [Estimating Market Impact],
   [Develops statistical methods for estimating impact while being explicit about selection, endogeneity, uncertainty, and model use.],
   [Parametric and nonparametric specifications; log-log models; nonlinear and constrained regression; heteroskedasticity and heavy tails; hierarchical shrinkage; interactions and segmentation; metaorder reconstruction; endogenous participation and duration; latent urgency; confounding and selection; measurement error; causal designs; uncertainty intervals; stability; residual diagnostics; policy sensitivity.],
-  status: [Source draft],
+  target: <ch-impact-estimation>,
+  status: [First draft],
 )
 
 #roadmap-entry(
   8,
-  [Modeling the State of Liquidity],
-  [Treats volume, spread, volatility, depth, and order flow as uncertain state variables that must be forecast jointly with their uncertainty.],
-  [Intraday and remaining-day volume; spread and depth dynamics; realized and forecast volatility; imbalance and order flow; trade and order-arrival processes; state-space and latent-liquidity models; regime switching; trees, boosting, neural networks, and Gaussian processes; probabilistic forecasts; calibration; scenario generation; drift monitoring; forecast value for control.],
+  [Short-Horizon Forecasting and Liquidity State],
+  [Forecasts the market quantities that distinguish execution actions, including both liquidity conditions and short-lived price pressure.],
+  [Decision horizons and action-conditional forecasts; intraday and remaining-day volume distributions; intended and realized participation; spread and depth transitions; book-walking cost; realized and forecast volatility; inventory-weighted forecast loss; imbalance, microprice, and order-flow imbalance; multi-horizon price and markout prediction; alpha decay and value net of execution cost; fill probability and fill-conditioned adverse selection; event intensities and point processes; state-space and latent-liquidity models; regime switching; trees, boosting, neural networks, and Gaussian processes; joint probabilistic forecasts; calibration; scenario generation; temporal leakage; forecast value for control; drift and fallback.],
+  target: <ch-liquidity-state>,
+  status: [First draft],
 )
 
 #roadmap-part(
@@ -217,6 +220,8 @@ the approved structure.
   [Experiments and Policy Evaluation],
   [Develops credible ways to decide whether a new execution policy improves outcomes and for which orders it improves them.],
   [Randomized execution experiments; A/B tests and switchbacks; stratification; interference; selection into algorithms; completion bias and censoring; common support; counterfactual policy values; inverse-propensity weighting; doubly robust estimation; heterogeneous effects; uncertainty for policy differences; economic versus statistical significance; staged rollout and monitoring.],
+  target: <ch-policy-evaluation>,
+  status: [First draft],
 )
 
 #roadmap-entry(
@@ -283,6 +288,8 @@ the approved structure.
   [From Research Question to Production Model],
   [Follows a model from its first research question through deployment, monitoring, and communication with traders and engineers.],
   [Problem statements and decision context; simple benchmarks; exploratory analysis; preregistered validation; reproducible experiments; feature and model versioning; leakage controls; stress and sensitivity tests; translating estimates into policy behavior; model-engine interfaces; monitoring and drift; retraining; governance; rollback; communicating uncertainty.],
+  target: <ch-production-research>,
+  status: [First draft],
 )
 
 #roadmap-entry(
