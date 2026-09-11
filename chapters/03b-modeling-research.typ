@@ -1,34 +1,40 @@
-#import "../style.typ": intuition, interview, research, takeaway, definition
+#import "../style.typ": intuition, interview, research, definition
 
 = Statistical Modeling as a Research Process <ch-modeling-research>
 
-A model is useful when it sharpens a question about the world. The fitted
-algorithm is only one step in that process. In practice, much of the difficult
-work happens earlier: deciding what the phenomenon actually is, what one
-observation should represent, which measurements carry information about the
-phenomenon, what information would have been available at decision time, and
-what sort of error would matter if the model were wrong.
+Suppose an execution-research team notices a familiar pattern: some parent
+orders cost much more than others, even after accounting for their notional
+size. The natural reaction is to open the historical order table, choose a set
+of features, fit a model, and ask whether the test $R^2$ looks respectable.
 
-This distinction is easy to miss because modern software makes fitting models
-cheap. A few lines of code can produce a regression, a boosted tree, or a neural
-network. The result may even have an impressive test score. None of that tells
-us whether the target was well defined, whether the sample represents the
-deployment population, whether the validation exercise mimics the future, or
-whether the model has learned a stable relationship rather than an accidental
-regularity.
+That is often the wrong place to begin.
 
-The useful mental shift is therefore
+Before a model can tell us anything useful, we have to decide what phenomenon
+we are trying to understand, which observations belong to that phenomenon, what
+information would actually have been available when a decision was made, and
+what kind of conclusion we want the model to support. A model that is good at
+predicting realized slippage may be unsuitable for estimating the causal effect
+of participation rate. A model that predicts average cost well may still be
+unsafe inside an optimizer if its fitted cost curve has the wrong local shape.
+A model that performs beautifully on a random train-test split may fail the
+first time the volatility regime changes.
+
+The purpose of this chapter is therefore not to catalog machine-learning
+algorithms. It is to develop a way of thinking about modeling problems. The
+central habit is to treat modeling as a sequence of questions about how the data
+were generated, what information they contain, and what decision the final model
+must support.
+
+A useful research loop is
 
 $
-  "phenomenon"
+  "market phenomenon"
+  arrow.r
+  "research question"
   arrow.r
   "data-generating story"
   arrow.r
   "measurement"
-  arrow.r
-  "estimand or target"
-  arrow.r
-  "validation"
   arrow.r
   "model"
   arrow.r
@@ -37,376 +43,437 @@ $
   "next experiment".
 $
 
-The fitting routine belongs in the middle, not at the beginning.
+The fitting routine sits inside this loop. It is not the loop itself.
 
 #intuition[
-  A good modeler does not ask, “Which algorithm should I try on this table?”
-  The first question is, “What process could have produced this table, and
-  which parts of that process am I trying to learn?” Once that question is
-  precise, model choice becomes much easier.
+  The difference between a modeler and someone who merely fits models is not
+  familiarity with more algorithms. It is the ability to look at a phenomenon,
+  imagine how the observed data could have arisen, identify the important
+  sources of variation and selection, and design an experiment that separates
+  competing explanations.
 ]
 
-== Start with the phenomenon, not the columns
+== Begin with the phenomenon you want to understand
 
-Suppose we observe that some execution programs are much more expensive than
-others. The raw phenomenon is “execution cost varies.” That statement is too
-vague to model.
+Consider the statement
 
-We first have to decide what we mean by cost. Arrival shortfall and VWAP
-slippage are not interchangeable labels for the same quantity. They compare the
-execution with different counterfactuals. We also have to decide whether an
-observation is a fill, a child order, a parent order, a symbol-day, or a short
-market interval. A model of fill-level price concession answers a different
-question from a model of parent-order implementation shortfall.
+> Large execution programs tend to have higher transaction costs.
 
-A useful problem statement therefore has at least five parts:
+It sounds like a modeling problem, but it is still too vague. What exactly is
+an "execution program"? What do we mean by "cost"? Do we care about the orders
+that entered one particular algorithm, all client orders that could have entered
+it, or all orders in some market? Are we trying to forecast cost before trading,
+explain why historical orders were expensive, estimate what would have happened
+under a different trading speed, or choose a future schedule?
 
-1. *Response.* What numerical quantity represents the phenomenon?
-2. *Population.* What collection of cases do we care about?
-3. *Unit of observation.* What is one statistically meaningful example?
-4. *Information set.* What can be known when the prediction or decision is made?
-5. *Use.* Is the output for description, prediction, causal comparison, or
-   control?
+Each version produces a different statistical problem.
 
-For a pre-trade execution-cost model, a concrete statement could be:
+For example, suppose we want a pre-trade model that helps an optimizer compare
+candidate participation rates. A precise version of the question might be:
 
-> For parent orders accepted by the execution engine, estimate the conditional
-> distribution of arrival shortfall using only information known at arrival, so
-> that an optimizer can compare candidate participation schedules.
+> Among parent orders accepted by the execution engine, what is the
+> distribution of side-adjusted arrival shortfall, conditional on information
+> available at order arrival and on a proposed execution schedule?
 
-That sentence already rules out many modeling mistakes. Realized market volume
-cannot quietly appear as a pre-trade feature. Child fills cannot be treated as
-independent orders. A model that predicts only the unconditional average is not
-enough if the optimizer needs state-dependent marginal costs.
+Several decisions are hidden inside that sentence.
 
-#definition("estimand and estimator")[
-  The *estimand* is the population quantity we want to learn. The *estimator* is
-  the rule we apply to data to estimate it. A machine-learning model is often
-  part of the estimator; it is not the estimand itself.
-]
+The *population* is the set of parent orders accepted by the execution engine.
+The *observation unit* is the parent order, not the individual fill. The
+*response* is arrival shortfall rather than VWAP slippage or a five-minute
+markout. The *information set* is limited to variables known at arrival. The
+*action* is the proposed schedule or some lower-dimensional description of it,
+such as intended participation. The *use* is control: the output will influence
+what the trading algorithm chooses to do.
 
-== Build a data-generating story before fitting anything
+Once the problem is written this way, many otherwise tempting modeling choices
+become obviously wrong. End-of-day realized volume cannot be used as a pre-trade
+feature. Hundreds of fills from the same parent order cannot be scattered
+independently across training and test sets. Realized participation cannot be
+interpreted automatically as the effect of choosing that participation because
+realized participation itself may have changed in response to the market path.
 
-Before writing a formula, sketch a plausible story for how the outcome arises.
-The story need not be literally true. Its purpose is to force important
-variables and dependencies into the open.
+This is why problem formulation is not administrative work before the "real"
+modeling begins. It determines what the model is allowed to mean.
 
-A generic representation is
+#definition("target, estimand, and estimator")[(
+  The *target* is the numerical outcome a model is asked to predict. The
+  *estimand* is the population quantity we would like to learn, such as a
+  conditional mean, a causal contrast, or a policy value. The *estimator* is the
+  rule applied to finite data to estimate that quantity. A regression, boosted
+  tree, or neural network is part of an estimator; it is not the estimand.
+)]
+
+== Write down a story for how the data came to exist
+
+Before choosing a model family, it helps to describe a plausible data-generating
+process. This does not mean claiming that the market literally follows a neat
+structural equation. The purpose is to make dependencies explicit enough that
+we can reason about them.
+
+For an execution-cost problem, a schematic representation is
 
 $
-  Y = f (X, Z, A, U) + epsilon,
+  Y = f (X, A, Z, U) + epsilon,
 $
 
-where
+where $Y$ is the observed cost, $X$ contains measured market and order state,
+$A$ denotes an execution action or policy choice, $Z$ contains latent or poorly
+measured state, $U$ represents broader regime effects, and $epsilon$ collects
+remaining idiosyncratic variation.
 
-- $Y$ is the outcome we observe;
-- $X$ contains measured state variables available to the model;
-- $Z$ contains latent or poorly measured state;
-- $A$ is an action or policy choice that may itself depend on the state;
-- $U$ represents broader regime or population effects; and
-- $epsilon$ collects idiosyncratic variation not explained by the model.
+The measured state $X$ might include requested quantity, spread, volatility,
+depth, expected market volume, time of day, and short-horizon order-flow
+signals. The action $A$ might include intended participation, aggressiveness, or
+venue allocation. The latent state $Z$ might include trader urgency, private
+information behind the order, or an unrecorded implementation detail. The
+regime variable $U$ might describe a macro-event day, an index rebalance, a
+futures roll, or a change in venue rules.
 
-For execution cost, $X$ might include requested size, spread, volatility,
-forecast volume, depth, imbalance, and time of day. $Z$ might include latent
-trader urgency or unrecorded information about the order. $A$ might be intended
-participation or an algo choice. $U$ might represent a volatile macro day, a
-futures roll regime, or a change in market structure.
+Now consider a few consequences of this picture.
 
-This picture immediately generates research questions.
+A trader who believes the price is about to move adversely may choose to trade
+faster. That same latent urgency can also be associated with subsequent price
+movement. Historical data may therefore show that fast orders have high
+slippage even if increasing speed, holding everything else fixed, would have
+reduced exposure to that adverse move. A regression of cost on realized speed
+cannot by itself distinguish these stories.
 
-If urgency affects both chosen speed and subsequent price movement, then the
-coefficient on realized speed is not automatically a causal effect of speed.
-If volatility is measured with a noisy historical estimator, attenuation and
-regime mismatch may obscure its role. If the algo adapts participation after
-observing adverse price movement, realized participation is partly an outcome
-of the path rather than a clean pre-treatment variable.
+Similarly, an adaptive algorithm may accelerate after observing deteriorating
+liquidity or an unfavorable price move. Realized participation is then partly a
+response to the outcome path. Treating it as though it were an exogenous input
+reverses the timing of the problem.
 
-The point is not to draw a perfect causal graph before every regression. The
-point is to develop the habit of asking what had to happen in the world for the
-recorded row to exist.
+The value of the data-generating story is that it turns a surprising fitted
+relationship into a research question. If the coefficient on participation has
+the "wrong" sign, the first reaction should not be to try a more powerful model.
+We should ask whether urgency, adaptation, selection, measurement error, or a
+regime variable can produce that sign.
 
 #research[
-  When a surprising coefficient appears, do not begin with an optimizer or a
-  different model family. First revisit the data-generating story. A surprising
-  sign can come from a real economic effect, but it can also come from selection,
-  an omitted state variable, measurement error, conditioning on a post-treatment
-  quantity, or a changing population.
+  A useful modeling habit is to explain, in words, how one row of the training
+  table came to exist. What decisions were made before the row was recorded?
+  Which variables were consequences of those decisions? Which quantities were
+  observed only afterward? This exercise often reveals more than another round
+  of hyperparameter tuning.
 ]
 
-== Separate prediction, explanation, causal estimation, and control
+== Prediction, explanation, causal estimation, and control are different jobs
 
-Many modeling arguments become confused because the purpose of the model is
-never stated.
+The same dataset can support several kinds of analysis, but the standards for a
+good answer are not the same.
 
-=== Prediction
+=== Prediction asks what can be known about an outcome
 
-Prediction asks
+A predictive model asks for the distribution of an outcome given information
+available at some time:
 
 $
-  "How accurately can we estimate " Y " from information available in " X "?"
+  P (Y | X).
 $
 
-A variable can be valuable for prediction even when it has no causal
-interpretation. A highly correlated proxy may be perfectly useful if it is
-stable, available in production, and does not leak the future.
+If our goal is to predict tomorrow's parent-order cost, a variable is useful if
+it improves stable out-of-sample prediction and is available at prediction
+time. It does not need to have a causal interpretation. A proxy can be extremely
+useful for prediction even if intervening on the proxy would do nothing.
 
-=== Explanation
+This is why predictive modeling can tolerate relationships that would be
+unacceptable in a causal analysis. The requirement is not "this coefficient is
+the effect of spread." The requirement is "this information improves the
+forecast in the population and regime where the model will be used."
 
-Explanation asks how variation in the response is associated with measured
-features under a particular statistical model. We may examine coefficients,
-partial relationships, variance decompositions, residual structure, and
-interactions. The conclusions are conditional on the model and sample.
+=== Explanation asks how the fitted conditional relationship behaves
 
-Explanation is stronger than merely obtaining predictions, but weaker than
-causal inference. Saying that spread has incremental explanatory power for
-slippage is not the same as saying that mechanically reducing spread would
-produce the coefficient-implied reduction in slippage.
+An explanatory analysis studies associations inside a specified statistical
+model. We might ask how predicted cost changes with relative size after
+conditioning on spread and volatility, whether the size relationship is
+approximately concave, or whether the volatility effect differs by liquidity
+bucket.
 
-=== Causal estimation
+These statements can be economically informative without being causal. If a
+linear model says that higher spread is associated with higher cost after
+conditioning on the included features, it does not follow that forcing the
+spread to decrease by one basis point would reduce cost by the fitted
+coefficient. The market states that produce narrow spreads may differ from those
+that produce wide spreads in many unmeasured ways.
 
-Causal analysis asks what would happen under an intervention:
+=== Causal estimation asks what an intervention would change
+
+A causal question compares potential outcomes under different actions. If $a$
+and $a'$ are two participation policies, the object of interest may be
 
 $
   E lr([Y (a') - Y (a)]).
 $
 
-This requires assumptions about treatment assignment, confounding, overlap,
-interference, and timing that predictive accuracy does not provide.
+Now treatment assignment matters. We need to reason about why one policy was
+chosen instead of the other, which confounders were measured, whether both
+policies were used in comparable states, and whether one order's treatment can
+affect another order's outcome.
 
-=== Control
+Predictive accuracy is not evidence that these conditions hold.
 
-Control asks which action should be taken. A model can have modest prediction
-error and still be poor for control if its local gradients are wrong in the
-region where the optimizer makes decisions. Conversely, a model can have a
-slightly worse global score but produce much more stable actions because it
-respects shape and support.
+=== Control asks which action should be chosen
 
-These goals can share the same dataset while requiring different validation and
-interpretation. Never let a single metric silently move the analysis from one
-goal to another.
+A control model is used inside a decision rule. Here the question is not only
+whether predicted costs are close to realized costs on average. The shape of
+the fitted response with respect to the action matters directly.
 
-== Decide what one observation means
+Suppose an optimizer chooses participation $a$ by minimizing a fitted cost curve
+$hat(C) (a,x)$. Two models can have nearly identical test RMSE and nevertheless
+produce very different schedules if one has an unstable local derivative with
+respect to $a$. A model can therefore be good at prediction and bad at control.
 
-A row in a dataframe is not automatically an independent statistical
-observation.
+This distinction is especially important in execution research because models
+are often built for one purpose and then reused for another. A post-trade TCA
+regression may be perfectly reasonable for explaining historical cost patterns
+and still be inappropriate as the structural cost curve inside an optimizer.
 
-Suppose a parent order creates hundreds of child fills. Those fills share the
-same parent intent, the same market path, the same benchmark, and an adaptive
-policy. Randomly splitting fills across training and test sets allows
-information from the same economic episode to appear on both sides.
+== The observation unit is part of the model
 
-The right unit of observation follows the question. If the target is parent
-order shortfall, the parent order is usually the natural unit. If the target is
-one-second quote response, the unit may be an event-time interval, but serial
-dependence must then be handled explicitly.
+A dataframe row looks like an observation because software presents it that
+way. Statistical independence does not follow from the row boundary.
 
-Ask four questions:
+Imagine a single parent order that generates 150 child orders and 600 fills.
+Those fills share the same parent objective, the same benchmark, the same market
+path, and an adaptive execution policy. If fill rows from the same parent appear
+in both training and validation sets, the model is being evaluated partly on an
+episode it has already seen.
 
-- What event makes a new observation genuinely new?
-- Which rows share a latent cause?
-- Which rows share future label information?
-- At what level would the model be deployed or the intervention be assigned?
+If the research question concerns parent-order implementation shortfall, the
+parent is usually the natural experimental unit. Features can still be built
+from lower-level events, but splitting and uncertainty calculations should
+respect the dependence created by the common parent.
 
-The answers determine splitting, weighting, standard errors, and often the
-definition of the target itself.
+For a different problem, the unit may genuinely be shorter. A model of
+one-second queue depletion might use event-time intervals, while a fill
+probability model might use resting-order episodes. The point is not that one
+unit is universally correct. The unit must match the phenomenon and the way the
+model will be used.
 
-== Construct a data contract
+A useful test is to ask what would count as a genuinely new realization of the
+problem. Another fill from the same parent order is not a new parent-order
+execution problem. Another parent order in the same symbol on the same event day
+may still share important shocks. A parent order several weeks later may be more
+independent, but perhaps not if the same client and strategy repeatedly generate
+orders with the same latent urgency.
 
-Every modeling table should come with a timing and provenance contract. For
-each variable, record when the underlying event occurred, when the value became
-knowable, and whether it was later revised.
+This reasoning determines more than the train-test split. It also affects
+weights, clustered standard errors, resampling, and the effective sample size.
 
-#table(
-  columns: (1.05fr, 1.35fr, 1.6fr),
-  inset: 5pt,
-  stroke: 0.5pt + rgb("d9dde2"),
-  fill: (x, y) => if y == 0 { rgb("eef5fb") },
-  [*Question*], [*Why it matters*], [*Typical failure*],
-  [When was the feature knowable?], [Defines the live information set], [Using end-of-day volume in a pre-trade model],
-  [When is the label complete?], [Defines embargo and overlap], [Adjacent samples share the same future return window],
-  [Was the value revised later?], [Research may see cleaner history than production], [Using corrected reference data unavailable live],
-  [What generated missingness?], [Missingness can be informative or selective], [Dropping difficult orders because fields are absent],
-  [What filtering created this table?], [Filters define the population], [Removing incomplete or volatile orders and then claiming generality],
-)
+== Time determines what the model is allowed to know
 
-This discipline prevents a common form of research optimism: constructing a
-beautiful historical dataset that could never have existed at the time of
-decision.
+Most financial leakage problems are timing mistakes disguised as feature
+engineering.
 
-== Treat the label as a measurement, not as truth
+For each feature, there are at least three relevant times:
 
-Supervised learning usually writes
+1. when the underlying market event occurred;
+2. when the value became available to the trading system;
+3. when the final corrected value became available to researchers.
+
+These times need not be equal.
+
+Suppose a pre-trade model uses an estimate of daily volume. A historical table
+may contain the final realized daily volume because it is convenient and clean.
+But the production system at 10:00 a.m. knew only a forecast and the volume
+observed so far. Replacing the live forecast with final daily volume during
+research can create a model that looks remarkably accurate and is impossible to
+reproduce in real time.
+
+The same issue appears with corrected market data, late corporate-action files,
+reconstructed reference data, revised symbol mappings, and features that use a
+future rolling window. A backtest often has a cleaner view of history than the
+trading system ever had.
+
+A robust research table should therefore carry a *data contract*. For every
+important variable, we should know its source, event timestamp, availability
+timestamp, revision policy, missing-value meaning, and population filters. This
+contract is not merely a data-engineering convenience. It defines the
+information set with respect to which a forecast or policy is valid.
+
+== The label is a measurement, not an oracle
+
+Supervised learning notation encourages us to write observations as
 
 $
-  (X_i, Y_i)
+  (X_i, Y_i),
 $
 
-as though $Y_i$ were ground truth. In many financial problems the label is
-itself an estimator or noisy proxy.
+as if $Y_i$ were the truth and all uncertainty lived in the mapping from $X$ to
+$Y$. In market data, the label is often noisy, constructed, or benchmark
+dependent.
 
-Arrival slippage contains market movement unrelated to the order. Realized
-volatility depends on sampling frequency and microstructure noise. A label such
-as “temporary impact” may depend on an arbitrary markout horizon. A trader's
-urgency label may be an imperfect classification extracted from metadata.
+Arrival shortfall contains both execution effects and market movement that
+would have occurred without the order. A five-minute markout is sensitive to the
+chosen horizon. Realized volatility depends on the estimator and sampling
+frequency. A "temporary impact" label may mix mechanical price pressure with
+information carried by the order.
 
-A useful decomposition is
+It is often useful to think schematically of
 
 $
   Y_"observed" = Y_"phenomenon" + eta_"measurement".
 $
 
-More rows do not necessarily eliminate measurement error. If the noise is
-irreducible at the individual-observation level, the attainable prediction
-accuracy may be bounded even with enormous data.
+This decomposition is not necessarily an estimable structural model. It is a
+reminder that improving the prediction of $Y_"observed"$ is not always the same
+thing as learning the phenomenon we actually care about.
 
-This matters when interpreting a plateau in $R^2$. A low $R^2$ does not by
-itself imply a poor model. It may indicate that the response is intrinsically
-noisy at the chosen horizon. The right question is whether the remaining error
-contains stable, actionable structure.
+Suppose a parent-order cost model reaches an out-of-sample $R^2$ of only 0.35.
+That number is not interpretable in isolation. If the label contains a large
+amount of unpredictable market movement, 0.35 may represent substantial
+predictable structure. If a supposedly stable quantity can be measured almost
+without noise, 0.35 may be disappointing.
 
-== Design features from mechanisms
+The useful question is therefore not "Is the $R^2$ high?" but "What variation
+remains, and is that variation predictable, measurable, and relevant to the
+decision?"
 
-Feature engineering should begin with mechanisms, not with a search over every
-available column.
+== Features should represent mechanisms
 
-For execution cost, a first mechanism list might be:
+A large feature table can create the illusion that more columns mean more
+information. A better starting point is to list the mechanisms that plausibly
+change the outcome and then decide how to measure each one.
 
-- *scale:* order size relative to available liquidity;
-- *speed:* intended participation or urgency;
-- *liquidity:* spread, depth, turnover, tick regime;
-- *risk:* volatility and jump intensity;
-- *state:* order-flow imbalance and recent market movement;
-- *clock:* time of day and proximity to open, close, or roll;
-- *identity:* product, venue, client objective, or algo version.
+For execution cost, the first mechanism map might contain order scale, trading
+speed, liquidity, volatility, short-horizon market state, time-of-day effects,
+and instrument-specific structure.
 
-For each mechanism, ask what observable quantity is a defensible proxy. Then
-ask how noisy that proxy is and whether it is known at the right time.
-
-This approach is more useful than adding features because they happen to be
-present. It also makes missing-variable reasoning easier. If residuals are
-systematically high around futures rolls, the relevant question becomes, “What
-part of the liquidity-migration mechanism is absent from the feature set?” rather
-than, “Which additional technical indicator should I generate?”
-
-=== Raw variables, normalized variables, and invariances
-
-Many domains contain obvious changes of scale. A $100000$ order has different
-meaning in a highly liquid stock and a thin contract. Ratios such as
+Order scale is not simply shares. Ten thousand shares is enormous in one
+instrument and trivial in another. Relative measures such as
 
 $
-  x = Q/"ADV"
+  q = Q / "ADV"
 $
 
-encode a hypothesis that market response depends more on relative size than
+or quantity relative to displayed depth attempt to measure how large the order
+is compared with available liquidity.
+
+Trading speed can be represented by intended participation, target duration, or
+an urgency parameter. Liquidity can be represented by spread, depth, turnover,
+queue state, or some combination of them. Volatility measures the price risk of
+waiting. Imbalance or recent signed flow may summarize short-lived pressure.
+Time of day can capture systematic changes in volume, spread, participant mix,
+and auction proximity.
+
+The important step is to connect each feature to a story. If we include depth,
+we should be able to say what role we expect depth to play and over what horizon.
+If we normalize cost by volatility, we are making a claim that some part of the
+cross-sectional scale of cost is proportional to volatility. If we divide size
+by ADV, we are hypothesizing that response depends more on relative than
 absolute size.
 
-Normalization is therefore part of the model. Dividing cost by volatility,
-spread, depth, or notional asserts a form of invariance. Test that assertion
-rather than treating normalization as harmless preprocessing.
+Normalization is therefore not harmless preprocessing. It is a modeling
+assumption about invariance.
 
-A good normalized feature should make relationships more stable across the
-population. If the fitted size curve still shifts strongly by liquidity bucket,
-the normalization has not removed the relevant heterogeneity.
+A useful normalization should make the relationship more stable across the
+population. If a supposedly universal cost curve in $Q/"ADV"$ still shifts
+systematically between liquid and illiquid instruments, the normalization has
+not removed all of the relevant heterogeneity.
 
-== Establish the validation design before model selection
+== Design validation before choosing the winning model
 
-The validation scheme determines what “generalization” means.
+A validation design answers a concrete question: *What kind of future novelty do
+we expect the model to face?*
 
-A random row split estimates performance on new rows drawn from approximately
-the same mixture as the historical sample. That may be reasonable for some
-static problems. It is often weak evidence for a trading model that will be
-deployed in the future.
+A random row split answers a narrow version of that question. It asks whether
+the model works on new rows drawn from roughly the same historical mixture as
+the training data. That can be useful, but it is often weaker than what a
+trading model needs.
 
-Common validation questions include:
+A model deployed next month must survive time. A model used on new instruments
+must survive cross-sectional novelty. A model used after an algorithm change
+must survive a changed action-selection mechanism. A model used in stress
+conditions must survive a regime that may have been rare in the training set.
 
-- Can the model generalize to a later period?
-- Can it generalize to unseen symbols?
-- Can it generalize to a new client or algo version?
-- Can it survive a volatility regime outside the center of the training sample?
-- Can it interpolate within the historical domain but avoid unstable
-  extrapolation?
-
-These questions suggest different holdouts.
-
-For a time-dependent problem, a useful sequence is
+For a time-dependent execution model, a more realistic sequence is often
 
 $
-  "train past"
+  "older training period"
   arrow.r
-  "tune on later period"
+  "later tuning period"
   arrow.r
-  "evaluate on untouched future".
+  "untouched future test period".
 $
 
-Rolling or expanding-window validation reveals whether performance is stable.
-Group holdouts reveal whether apparent accuracy comes from memorizing entity
-effects. Purging or embargoing may be needed when neighboring examples share
-future outcomes.
+Rolling or expanding windows then reveal whether performance is stable or
+whether one lucky test period is carrying the conclusion.
 
-#takeaway[
-  Validation is not an administrative step after modeling. It is an explicit
-  statement of the future you expect the model to face.
-]
+The split must also respect the observation unit. If parent orders are the
+research unit, all child events belonging to a parent should travel together.
+If several samples share the same future return window, an embargo may be needed
+between training and validation. If symbol identity is powerful, a grouped
+holdout can show how much of the apparent performance comes from memorizing
+persistent symbol effects.
 
-== Start with a model ladder
+There is no single universally correct split. There is only a split that is
+well or poorly aligned with the deployment question.
 
-A strong modeling workflow usually begins with models that are intentionally
-too simple.
+== Build a model ladder instead of jumping to the most flexible method
 
-For a continuous response, a useful ladder is:
+Suppose the final production candidate may be a boosted tree or a neural
+network. It is still useful to begin with deliberately simple models.
+
+A typical regression ladder might be
 
 $
   "mean"
   arrow.r
-  "one-feature model"
+  "one mechanism"
   arrow.r
-  "linear model"
+  "multivariate linear"
   arrow.r
-  "regularized linear model"
+  "regularized linear"
   arrow.r
-  "splines or GAM"
+  "smooth nonlinear"
   arrow.r
-  "interaction model"
+  "selected interactions"
   arrow.r
   "flexible ML".
 $
 
-The purpose is not nostalgia for simple models. Each rung answers a different
-question.
+Each step is an experiment.
 
-The unconditional mean tells us how much error exists before using any
-features. A one-feature model shows whether a dominant mechanism carries signal.
-A multivariate linear model tells us how much can be captured by additive first-
-order structure. A spline model tests whether smooth nonlinearity matters. A
-tree ensemble tests whether richer interactions and partitions provide
-incremental value.
+The unconditional mean tells us the error level before using any information.
+A size-only model asks how much variation can be captured by scale alone.
+Adding intended participation asks whether execution speed contains incremental
+information. Adding spread and volatility asks whether market state explains
+cost beyond order characteristics. A spline or generalized additive model asks
+whether the main effects are smooth but nonlinear. A boosted tree then asks
+whether thresholds and interactions that were difficult to specify manually
+provide further out-of-sample value.
 
-Suppose an out-of-sample sequence looks like this:
+Imagine the following forward-test results:
 
 #table(
-  columns: (1.6fr, 0.7fr, 2.1fr),
+  columns: (1.65fr, 0.65fr, 2.2fr),
   inset: 5pt,
   stroke: 0.5pt + rgb("d9dde2"),
   fill: (x, y) => if y == 0 { rgb("eef5fb") },
-  [*Model*], [*$R^2$*], [*What we learn*],
-  [Mean baseline], [0.00], [Reference uncertainty],
-  [Relative size only], [0.17], [Scale explains meaningful variation],
-  [Size + participation], [0.27], [Trading speed adds information],
-  [Add spread + volatility], [0.39], [Market state matters substantially],
-  [Smooth additive model], [0.44], [Nonlinear marginal effects matter],
-  [Boosted trees], [0.46], [Remaining high-order interactions add relatively little],
+  [*Model*], [*$R^2$*], [*Interpretation*],
+  [Mean baseline], [0.00], [No conditional information used],
+  [Relative size], [0.16], [Order scale contains meaningful signal],
+  [Size + intended participation], [0.25], [Trading speed adds information],
+  [Add spread + volatility], [0.38], [Market state matters substantially],
+  [Smooth additive model], [0.44], [Nonlinear main effects matter],
+  [Boosted trees], [0.46], [Higher-order interactions add only a modest gain],
 )
 
-The final number, $0.46$, is useful. The path to it is more informative. It
-suggests that much of the predictable structure is already captured by a small
-set of economic mechanisms and smooth nonlinearities. That is knowledge about
-the phenomenon, not merely a ranking of algorithms.
+The final value, 0.46, is useful. The sequence is more useful. It tells us that
+a small set of economically meaningful variables already captures much of the
+predictable variation, that nonlinearity matters, and that very high-order
+interactions add relatively little. We have learned something about the
+phenomenon, not merely ranked algorithms.
 
-== Use linear models as microscopes
+This is the main reason to keep simple models in the workflow. They make the
+source of improvement visible.
 
-Linear regression is valuable even when the final production model is not
-linear. It provides a controlled environment for examining incremental
-information, correlation, noise, instability, and specification error.
+== Linear models are useful even when reality is not linear
+
+Linear regression is often introduced as though its main purpose were to assume
+that the world is linear. In research, it is better viewed as a microscope. Its
+simplicity makes conditioning, collinearity, incremental information, and
+misspecification easier to see.
 
 Write
 
@@ -415,142 +482,128 @@ $
 $
 
 The fitted coefficient $hat(beta)_j$ describes how the fitted conditional mean
-changes with $X_j$ while the other included variables are held fixed. The phrase
-“included variables” is doing a great deal of work. The coefficient can change
-when a correlated feature is added because the conditioning question changed.
+changes with $X_j$ while the other *included* variables are held fixed. The word
+"included" matters. If spread and depth are correlated, adding depth can change
+the spread coefficient even when the underlying predictive surface changes very
+little.
 
-=== Interpreting $R^2$
+This is not a paradox. The coefficient answers a different conditioning
+question after the model specification changes.
 
 For squared-error regression,
 
 $
-  R^2 = 1 - "SSE"/"SST".
+  R^2 = 1 - "SSE" / "SST".
 $
 
-It measures improvement over predicting the sample mean under that loss. An
-$R^2$ of $0.40$ says that the fitted predictions remove 40% of the squared
-variation relative to the mean baseline in the evaluated sample.
+On an out-of-sample set, $R^2$ measures improvement in squared prediction error
+relative to predicting the reference mean. It does not say that the features
+"explain" that percentage of the economic phenomenon in a causal sense.
 
-It does *not* say that the features causally generate 40% of the phenomenon.
-
-More useful for research is often the incremental change
+A more informative research quantity is often the incremental gain
 
 $
-  Delta R^2 = R^2 (X, Z) - R^2 (X),
+  Delta R^2 = R^2 (X,Z) - R^2 (X),
 $
 
-evaluated out of sample. If adding volatility to a model with size and spread
-raises out-of-sample $R^2$ materially, volatility contains incremental
-predictive information beyond those variables.
+computed on data that were not used to fit either model. If adding volatility
+to a size-and-spread model produces a stable increase in forward-test $R^2$,
+volatility contains incremental predictive information beyond those variables.
 
-With correlated predictors, the total explained variation cannot generally be
-assigned uniquely to individual features. Spread, depth, and volatility can
-carry overlapping information. “Spread explains 12% of cost” is therefore
-usually too strong unless a particular variance-decomposition convention has
-been specified.
+With correlated predictors, however, there is generally no unique way to assign
+all explained variation to individual features. Spread, depth, and volatility
+can contain overlapping information about liquidity conditions. Statements such
+as "spread explains twelve percent of execution cost" require a specific
+variance-decomposition convention and should not be inferred casually from one
+regression.
 
-=== Coefficient stability is evidence
+Coefficient stability is itself diagnostic. If the fitted spread coefficient
+changes sign across samples while the model's predictions remain stable, then
+the predictive surface may be much better identified than the individual
+parameterization. That is a warning against overinterpreting coefficients, but
+not necessarily against using the predictor.
 
-Fit the same regression across time windows, liquidity buckets, symbols, and
-regimes. If a coefficient changes sign repeatedly while predictions remain
-stable, the model may be using correlated variables interchangeably. The
-predictive surface can be identified more strongly than the individual
-coefficients.
+== Bias, variance, and noise become useful when tied to symptoms
 
-That distinction is crucial. Stable predictions do not guarantee stable
-interpretation.
+The classical bias-variance decomposition is often taught as a formula and then
+forgotten. Its practical value is diagnostic.
 
-== Bias, variance, and irreducible noise as practical diagnoses
-
-The classical decomposition is easiest to use when treated as a diagnostic
-framework rather than an equation to memorize.
-
-For a learned predictor $hat(f)$ evaluated at $x$,
+For squared-error prediction at a fixed state $x$, one writes schematically
 
 $
-  E lr([(Y-hat(f) (x))^2])
+  E lr([(Y - hat(f) (x))^2])
   =
-  "noise"
+  "irreducible noise"
   + "bias"^2
   + "variance".
 $
 
-The terms are conceptual:
+The decomposition asks three different questions.
 
-- *Noise* is outcome variation that cannot be predicted from the available
-  information.
-- *Bias* is systematic error caused by restrictions or misspecification in the
-  modeling procedure.
-- *Variance* is sensitivity of the fitted model to the particular training
-  sample.
+*Noise* is outcome variation that cannot be predicted from the available
+information. In execution data, part of the future market path may simply be
+unpredictable from the state we record.
 
-The practical question is: which term appears to be limiting us?
+*Bias* is systematic error induced by the representation or model class. A
+linear cost model can have high bias if the true size relationship is strongly
+concave. A model can also have bias because an important state variable is
+missing entirely.
 
-=== Signs of high bias
+*Variance* is sensitivity of the fitted model to the particular training
+sample. A highly flexible model with many weak predictors may fit one historical
+window extremely well and produce a noticeably different surface after a small
+change in the sample.
 
-- Training error is poor and validation error is also poor.
-- Residuals show systematic curvature or regime-dependent mean error.
-- A simple model repeatedly misses the same regions of feature space.
-- Adding genuinely informative mechanisms produces large gains.
-- A more flexible but still well-validated model improves both train and test
-  performance.
+These concepts are most useful when connected to observable symptoms.
 
-Possible responses are to improve measurements, add missing mechanisms, change
-the functional form, allow interactions, or model separate regimes.
+If training and validation error are both poor and residuals show smooth
+curvature with size, the problem looks like bias. More data alone will not make
+a straight line become curved. A more appropriate transformation, spline, or
+mechanism may help.
 
-=== Signs of high variance
+If training error is excellent but future error is much worse, and fitted
+relationships change substantially across resamples, variance is a plausible
+problem. More relevant data, stronger regularization, partial pooling, or a
+simpler representation may help.
 
-- Training performance is excellent but validation performance is much worse.
-- Coefficients or feature importances move dramatically across resamples.
-- Small changes in the training window produce large prediction changes.
-- Removing weak features or increasing regularization improves validation.
-- Performance improves noticeably as the training sample grows.
+If training and validation error have converged, additional flexibility adds no
+stable gain, and residuals are centered with little remaining structure, then
+noise or missing information may dominate. The next improvement may require a
+better label, richer state, or a different prediction horizon rather than a
+more powerful algorithm.
 
-Possible responses are more data, stronger regularization, fewer degrees of
-freedom, partial pooling, more stable features, or a simpler model family.
+== Learning curves tell us what "more data" is likely to buy
 
-=== Signs that noise is dominant
+When a model performs poorly, "collect more data" is tempting advice. Learning
+curves make that advice testable.
 
-- Train and validation errors have largely converged.
-- Additional flexibility stops producing robust gains.
-- Repeated measurements of similar states still show wide outcome dispersion.
-- Model errors appear conditionally centered and largely structureless.
-- Independent estimates of the label itself are noisy.
+Fit the same modeling procedure on progressively larger training samples and
+track both training and validation performance. If validation error continues
+to improve as the sample grows while the train-validation gap narrows, the
+procedure is still benefiting from additional information. If both curves have
+flattened at an unsatisfactory level, more rows drawn from the same distribution
+may have limited value.
 
-In that situation, collecting more of the *same* data may tighten aggregate
-estimates but will not make individual outcomes highly predictable. Improvement
-may require better measurements, a different prediction horizon, a more
-predictable target, or richer state information.
+In markets, sample size should not be confused with row count. Ten years of
+history are not automatically ten times as useful as one year. Old observations
+may come from different tick sizes, venue rules, market participants, execution
+logic, or volatility regimes. Likewise, one million child fills generated by a
+small number of parent orders do not provide one million independent examples.
 
-== Learning curves answer “more data or a better model?”
+The effective value of more data depends on relevance, diversity, and
+independence.
 
-Plot training and validation performance as a function of training-set size.
+This also changes how targeted data collection should work. If model error is
+concentrated in large, illiquid orders, adding hundreds of thousands of small,
+liquid orders may reduce global error while doing almost nothing where the model
+is weakest. The useful question is not simply "Do we need more data?" but "In
+which region of the state-action space would an additional observation reduce
+decision-relevant uncertainty?"
 
-If validation performance continues improving while the training-validation gap
-shrinks slowly, more data may be valuable. If both curves plateau at a poor
-level, simply multiplying the sample size is less promising.
+== Residuals are where the next research question usually comes from
 
-The exact shape depends on the model and problem, but the question is powerful:
-is the model unable to learn the available structure, or have we already learned
-most of what the current representation contains?
-
-For financial data, “more data” also needs qualification. Ten years of history
-is not automatically ten times as informative as one year. Old observations may
-come from different tick sizes, market participants, routing rules, volatility
-regimes, and execution logic. Effective sample size depends on relevance and
-dependence, not only row count.
-
-#intuition[
-  More observations reduce estimation uncertainty only to the extent that they
-  are informative about the deployment distribution. A million stale or highly
-  dependent rows can be less useful than a much smaller sample from the current
-  regime.
-]
-
-== Residuals are the researcher's map
-
-A scalar test score says how much error remains. Residuals tell us where it
-remains.
+A single test metric compresses the entire error distribution into one number.
+That is useful for comparison and poor for diagnosis.
 
 Let
 
@@ -558,339 +611,358 @@ $
   e_i = y_i - hat(y)_i.
 $
 
-The first diagnostic is not merely a histogram of $e_i$. Condition residuals on
-variables that represent mechanisms:
+The first question is whether residuals are centered in the regions that matter.
+Instead of looking only at a global histogram, examine residuals against
+relative size, intended participation, spread, depth, volatility, recent price
+movement, time of day, side, liquidity bucket, product, client class, and market
+regime.
 
-- size and participation;
-- spread, depth, volatility, and volume;
-- recent return and order-flow imbalance;
-- time of day;
-- symbol or liquidity bucket;
-- side;
-- client or strategy;
-- futures roll proximity;
-- market regime.
+Suppose the average residual is close to zero, but the model underpredicts cost
+systematically for large orders in high-volatility periods. That pattern is much
+more informative than the global RMSE. It suggests a missing interaction or a
+functional form that does not allow the size effect to steepen with volatility.
 
-Then ask whether
+Suppose instead that errors become large only near futures roll dates. Then the
+problem may not be generic model capacity at all. Liquidity may be migrating
+between contracts, the denominator used in relative size may be wrong, or the
+training set may have little support in that regime.
 
-$
-  E lr([e | X_j])
-$
+Suppose mean residuals are well centered but the error variance grows sharply
+with order size. The conditional mean may be adequate while the uncertainty
+model is wrong. A weighted loss, a variance model, or a quantile model may be
+more relevant than changing the mean specification.
 
-is approximately zero across the deployment range.
+Residual analysis turns model failure into hypotheses. The most productive
+question is usually not "Which model should I try next?" It is "What market or
+measurement mechanism could produce this residual pattern?"
 
-Different residual patterns suggest different next experiments.
+#intuition[
+  A model that fails in a structured way is often more scientifically useful
+  than a slightly better model whose errors have not been investigated. The
+  structure tells us what the current representation does not understand.
+]
 
-#table(
-  columns: (1.45fr, 1.7fr, 1.8fr),
-  inset: 5pt,
-  stroke: 0.5pt + rgb("d9dde2"),
-  fill: (x, y) => if y == 0 { rgb("eef5fb") },
-  [*Residual pattern*], [*Possible explanation*], [*Next investigation*],
-  [Curvature versus size], [Wrong functional form or scaling], [Splines, log scale, alternative denominator],
-  [Bias only in high volatility], [Missing interaction or regime], [Size × volatility, regime-specific calibration],
-  [Bias near futures roll], [Liquidity migration not represented], [Days-to-roll, contract depth, front/next activity],
-  [Error variance rises with size], [Heteroskedastic response], [Weighted loss, variance model, quantile analysis],
-  [Mean error centered but right tail poor], [Conditional distribution misspecified], [Quantile or distributional model],
-  [Good random split, poor future split], [Temporal shift or leakage], [Drift analysis, retraining window, feature timing],
-  [One symbol dominates errors], [Entity heterogeneity or data issue], [Hierarchical effect, data audit, support check],
-)
+== Increase complexity in response to a specific failure
 
-A residual plot is therefore not cosmetic. It is a mechanism-discovery tool.
+There is no virtue in using a simple model when the phenomenon is complicated.
+There is also no virtue in using a complicated model before we know what
+problem it is solving.
 
-== Escalate complexity only in response to evidence
+If residuals are smoothly curved with size, a transformation or spline is a
+direct response. If the effect of participation changes with volatility, an
+interaction is a direct response. If several features have smooth nonlinear
+relationships, a generalized additive model can represent them while leaving
+the shape visible.
 
-When a linear model fails, the next question should be *how* it fails.
+Tree ensembles become compelling when the data support many thresholds and
+interactions that would be cumbersome to specify manually. Neural networks
+become compelling when the representation itself must be learned from rich
+inputs such as order-book sequences, event streams, or very large feature
+spaces.
 
-If residuals are smoothly curved against one variable, use a transformation or
-spline before reaching for an opaque model. If the effect of size changes with
-volatility, add an interaction. If several effects vary smoothly, a generalized
-additive model may capture most of the structure while preserving
-interpretability.
+The escalation in model capacity should therefore have a reason. We should be
+able to say what pattern the current model cannot represent and how the next
+model class is capable of representing it.
 
-Flexible tree models become compelling when the data support many thresholds
-and interactions that are difficult to specify manually. Neural networks become
-compelling when the representation itself must be learned from rich inputs such
-as sequences, order-book states, images, or text, or when scale makes learned
-representations advantageous.
+This principle also keeps research interpretable. If a boosted tree beats a
+linear model by ten percentage points of out-of-sample $R^2$, that is evidence
+that the linear specification is missing substantial predictive structure. It
+is not yet evidence that "nonlinear machine learning is better." The next task
+is to find out whether the gain comes from smooth nonlinearity, a few important
+interactions, regime partitioning, symbol identity, or leakage.
 
-The hierarchy is not “simple models are good and complex models are bad.” The
-principle is:
+== Correlated features should be studied as groups and representations
 
-> Increase model capacity because diagnostics reveal structure the current
-> model cannot represent.
+Feature importance becomes slippery when many variables measure overlapping
+parts of the same market state.
 
-This makes each increase in complexity an empirical response rather than a
-default preference.
+Spread, displayed depth, turnover, and short-horizon price impact can all carry
+information about liquidity. Removing one of them may have little effect because
+another substitutes for it. That does not imply the liquidity mechanism is
+irrelevant.
 
-== Think about features in groups, not one at a time
+It is often more informative to compare coherent groups. Fit a model with order
+scale and speed. Add a liquidity group. Add a volatility group. Add short-term
+flow state. Compare incremental out-of-sample performance and residual changes.
+Then study alternative representations inside a group: raw spread versus spread
+in basis points, raw size versus log size, quantity versus $Q/"ADV"$.
 
-Real predictors are correlated. Removing one feature can make another appear
-more important because the two carry overlapping information.
+Regularization is useful when many correlated variables encode similar
+information. Ridge regression can stabilize a prediction surface by shrinking
+coefficients together. Lasso can produce sparse representations, although the
+selected member of a highly correlated group may change from sample to sample.
+For interpretation, stability across resamples is often more informative than a
+single feature-ranking chart.
 
-A useful feature analysis operates at several levels:
+== Interpolation and extrapolation are different kinds of prediction
 
-- *mechanism group:* liquidity, volatility, order scale, flow state;
-- *individual variable:* spread, depth, ADV, realized volatility;
-- *representation:* raw value, log value, percentile, normalized ratio;
-- *interaction:* size × liquidity, participation × volatility.
+A model is usually most trustworthy where the training data provide comparable
+examples.
 
-Compare models by removing or adding coherent groups. Evaluate the change out
-of sample.
+Suppose almost every historical parent order is below 3% of ADV, but an
+optimizer asks the cost model to evaluate a 20% ADV schedule. The model may
+return a number, but that does not mean the data identified the number. The
+prediction is being driven largely by the model's extrapolation assumptions.
 
-If deleting an entire mechanism group barely changes performance, either the
-group adds little information or its information is already duplicated
-elsewhere. If deleting one of twenty correlated variables has no effect, that
-does not imply the underlying mechanism is irrelevant.
+This distinction is easy to miss with flexible software because a prediction
+function is defined everywhere. Statistical support is not.
 
-Regularization is especially useful when many variables describe overlapping
-aspects of the same state. Ridge stabilizes the prediction surface by shrinking
-correlated coefficients. Lasso can produce sparse representations, although
-which member of a correlated group survives can be unstable. Stability across
-resamples is often more informative than one selected feature list.
+Support should therefore be examined in the joint state-action space. Are there
+historical orders with similar size, participation, volatility, and liquidity?
+Is the proposed action common in that regime or almost unseen? Does the model
+have local data, or is it combining separate marginal experiences that rarely
+occurred together?
 
-== Know when to add data, remove features, or change the target
+The issue is especially important when a model is optimized. An optimizer does
+not passively accept the historical action distribution. It searches the action
+space for regions that look attractive. If the fitted cost surface is
+artificially cheap in a sparse region, the optimizer can actively steer the
+policy toward precisely the part of the model we know least about.
 
-A common modeling question is whether poor performance calls for more data or a
-different model. There is no universal rule, but diagnostics narrow the choice.
+For this reason, a control model should be audited over its full feasible action
+domain, not only at historical actions. Conservative extrapolation, explicit
+constraints, uncertainty penalties, or abstention can be preferable to an
+unqualified point estimate.
 
-#table(
-  columns: (1.5fr, 1.8fr, 1.7fr),
-  inset: 5pt,
-  stroke: 0.5pt + rgb("d9dde2"),
-  fill: (x, y) => if y == 0 { rgb("eef5fb") },
-  [*Evidence*], [*Likely bottleneck*], [*Reasonable response*],
-  [Large train-test gap that shrinks with sample size], [Estimation variance], [Collect relevant data; regularize],
-  [Train and test both weak; structured residuals], [Bias or missing state], [Add mechanisms or change functional form],
-  [Train and test both weak; residuals mostly structureless], [Label noise or missing information], [Improve measurement or redefine target],
-  [Performance worsens after many weak features], [Variance / spurious correlations], [Remove, group, or regularize features],
-  [Old data hurt recent validation], [Distribution shift], [Shorter or weighted history; regime features],
-  [Rare region has large error], [Lack of support], [Targeted data collection or explicit abstention],
-  [Average score good, important tail poor], [Objective mismatch], [Tail-aware loss or distributional target],
-)
+== Uncertainty is part of the modeling result
 
-The phrase *targeted data collection* matters. If errors are concentrated in
-large illiquid orders, collecting millions of additional small liquid orders is
-unlikely to solve the problem. Data should be added where uncertainty or
-decision sensitivity is high.
-
-== Distinguish interpolation from extrapolation
-
-Machine-learning models are most trustworthy where the training data provide
-support. A prediction for a 20% ADV order is not simply a noisier version of a
-prediction for a 1% ADV order if the training sample contains almost no orders
-above 3% ADV. It may be an extrapolation driven mostly by model assumptions.
-
-Support diagnostics should therefore accompany prediction:
-
-- distance to the training distribution;
-- local sample size or density;
-- range of each important variable;
-- presence of comparable combinations of features;
-- regime and entity representation.
-
-This is especially important for control because an optimizer actively searches
-for actions. If the fitted cost model looks artificially cheap in a sparse
-region, the optimizer may deliberately steer into that region.
-
-A model used for optimization should be audited over the *action domain*, not
-only over historically observed actions.
-
-== Uncertainty is part of the output
-
-A point prediction hides two different uncertainties:
-
-1. uncertainty about the conditional outcome itself; and
-2. uncertainty about the estimated model.
-
-The first is aleatoric or outcome uncertainty. The second is epistemic or
-estimation uncertainty.
-
-For a trading decision, both can matter. Two schedules may have nearly identical
-predicted mean cost, but one estimate may rely on abundant historical support
-while the other requires extrapolation.
-
-Useful outputs can therefore include
+A point forecast such as
 
 $
-  E lr([Y | X]),
-  quad Q_tau (Y | X),
-  quad P (Y>c | X),
+  hat(mu) (x) = E lr([Y | X=x])
 $
 
-along with confidence or stability measures for the fitted relationship.
+hides two distinct questions. How variable is the outcome even if we knew the
+conditional distribution perfectly? And how uncertain are we about the fitted
+conditional distribution because the data are finite or sparse?
 
-Calibration should be checked empirically. If a model claims that 90% prediction
-intervals contain the outcome only 60% of the time in high-volatility periods,
-the uncertainty model is not merely imperfect - it is systematically misleading
-where risk is high.
+The first is outcome uncertainty. The second is estimation uncertainty.
 
-== Distribution shift is a modeling problem, not just a monitoring problem
+For trading decisions, both can matter. A schedule may have a low predicted
+mean cost but a wide conditional tail. Another schedule may have a similar mean
+but be supported by much more historical data. A decision-maker may reasonably
+prefer the second even when the point estimates are almost identical.
 
-Suppose the conditional relationship at time $t$ is
+Depending on the application, useful outputs include conditional quantiles,
+
+$
+  Q_tau (Y | X=x),
+$
+
+exceedance probabilities,
+
+$
+  P (Y > c | X=x),
+$
+
+and confidence or stability measures for the fitted response surface.
+
+Uncertainty models should themselves be validated. If nominal 90% prediction
+intervals contain only 60% of outcomes during volatile periods, the failure is
+not cosmetic. The model is understating uncertainty exactly where risk matters
+most.
+
+== Distribution shift should change the modeling conversation
+
+A historical model assumes that past relationships remain useful in the future.
+In markets, this assumption deserves continuous scrutiny.
+
+At time $t$, write the relevant conditional distribution as
 
 $
   P_t (Y | X).
 $
 
-A model trained on historical data assumes, explicitly or implicitly, that this
-relationship will remain useful in the future. In markets, both $P (X)$ and
-$P (Y | X)$ can change.
+Both the distribution of states $P_t (X)$ and the conditional relationship
+$P_t (Y | X)$ can move. Spread and volatility distributions change. Venue rules
+change. Tick sizes change. Client order mix changes. A new version of an
+execution algorithm changes which actions are chosen in which states. Futures
+liquidity may migrate earlier around the roll than it did in the historical
+sample.
 
-Examples include:
+A model can therefore fail even if nothing is "wrong" with the original fit.
+The world supplying its inputs has changed.
 
-- spread and volatility distributions shifting;
-- new venue rules;
-- tick-size changes;
-- new execution logic changing the action-selection mechanism;
-- futures liquidity migrating earlier or later around rolls;
-- clients changing the mix of urgency and benchmarks.
+Monitoring should look beyond a single aggregate error metric. Compare
+calibration, residual bias, and fitted relationships through time. Does the size
+curve move? Does the participation effect weaken in volatile regimes? Does the
+model remain well calibrated for large orders even while global RMSE stays
+stable?
 
-A useful stability analysis compares not only average score by date but also
-the fitted relationships themselves. Does the size slope change? Does the
-volatility adjustment retain its sign? Does calibration deteriorate before
-RMSE does?
+When a relationship changes, the response depends on the cause. More frequent
+retraining can help with gradual drift. Regime features can help when the regime
+is observable. Hierarchical or partially pooled models can help when products
+share structure but not identical parameters. Shorter training windows can help
+when old data have become misleading, but they also increase estimation
+variance.
 
-Regime variables can help when regimes are measurable. Retraining can help when
-recent data are relevant. Partial pooling can help when relationships differ but
-share structure. None of these eliminates the need to understand why the
-distribution moved.
+There is no substitute for understanding why the distribution moved.
 
-== Evaluate the model through the decision it will drive
+== The model should be evaluated through the decision it drives
 
-For a model that feeds an optimizer, predictive metrics are necessary but not
-sufficient.
+For execution research, the final test is often downstream.
 
-Suppose two cost models have similar RMSE. Model A is smooth and slightly
-conservative at high participation. Model B has lower average error but a
-locally jagged prediction surface. An optimizer that differentiates the cost
-curve may produce stable schedules under A and erratic jumps under B.
-
-The downstream loss should therefore appear in model evaluation.
-
-If the action selected from model $m$ is
+Suppose model $m$ supplies a cost estimate $hat(C)_m (a,x)$ and the optimizer
+chooses
 
 $
-  a_m^* (x) = arg min_a hat(C)_m (a,x),
+  a_m^* (x) = arg min_a hat(C)_m (a,x).
 $
 
-we care about the realized or simulated decision loss
+Prediction metrics measure error at historical state-action pairs. The trading
+system cares about the consequence of the selected action. Conceptually, the
+quantity of interest is closer to
 
 $
-  L_m = C (a_m^* (x),x) - C (a_"reference"^* (x),x),
+  C (a_m^* (x), x) - C (a_"reference"^* (x), x),
 $
 
-not only the prediction error averaged over historical actions.
+where the second action is a trusted reference or benchmark policy.
 
-This closes the loop between modeling and control. The regions where the model
-needs the most accuracy are the regions where prediction error changes the
-decision.
+This changes what model error matters.
 
-#takeaway[
-  A model is not finished when its residuals look acceptable. It is finished
-  only when we understand where it is reliable, where it is uncertain, how its
-  errors change decisions, and what evidence would cause us to retrain, revise,
-  or reject it.
-]
+An error in a region where all candidate schedules have nearly identical cost
+may have little policy consequence. A much smaller error near the point where
+the optimizer switches from 10% to 25% participation can change the action
+materially. Local slope and curvature can therefore matter more than global
+RMSE.
 
-== A worked modeling investigation: execution cost
+A useful policy-level evaluation passes candidate models through the actual
+optimizer over a grid of order sizes, volatility states, spreads, alpha-decay
+assumptions, and liquidity regimes. We then inspect the schedules as well as the
+predictions. Are they monotone where economics says they should be? Do small
+changes in state create implausibly large jumps? Does the optimizer move into
+poorly supported regions? Does a model improvement on average create worse tail
+behavior?
 
-Consider a new project: understand what drives parent-order arrival shortfall
-and build a pre-trade cost model.
+This is the point where statistical modeling and control meet. The model is not
+finished when it predicts history well. It is finished only when its failure
+modes are understood in the context of the decisions it will influence.
 
-=== Step 1: define the target
+== A complete investigation: building a pre-trade execution-cost model
 
-Choose side-adjusted arrival shortfall in basis points at the parent-order level.
-State how incomplete orders and explicit fees are handled.
+It is useful to see the ideas above as one continuous research process rather
+than as separate diagnostics.
 
-Do not begin by fitting a model. First inspect the response distribution by
-side, size, symbol liquidity, and date. Look for obvious data errors, censoring,
-heavy tails, and changes in measurement conventions.
+Suppose we are asked to build a parent-order cost model for a futures execution
+algorithm. The model will be used before trading to compare candidate execution
+speeds.
 
-=== Step 2: write the mechanism map
+=== First, define the economic quantity
 
-A first hypothesis might be:
+Choose side-adjusted arrival shortfall in basis points as the primary response.
+State how explicit fees are treated and what happens to incomplete orders. If
+unfinished orders are excluded, recognize immediately that the sample is
+selected: difficult orders may disappear from the training set. If they are
+included using a terminal mark, document that convention because it changes the
+meaning of the response.
+
+Before fitting anything, plot the response distribution across time, side,
+relative size, liquidity, and product. Look for changes in units, benchmark
+construction, outliers, and periods where the data-generating process plainly
+changed.
+
+=== Next, construct the mechanism map
+
+A first pre-trade hypothesis might be
 
 $
-  C = f ("relative size", "speed", "spread", "volatility", "depth",
-        "flow state", "time", "regime") + epsilon.
+  C = f (
+    "relative size",
+    "intended participation",
+    "spread",
+    "volatility",
+    "depth",
+    "time of day",
+    "product state",
+    "roll state"
+  ) + epsilon.
 $
 
-Mark which variables are known at arrival and which are realized later. If the
-model is pre-trade, realized duration and realized market volume belong in
-diagnostics, not silently in the feature set.
+For each candidate variable, mark whether it is known at arrival. Realized
+market volume, realized duration, and realized participation can be valuable for
+post-trade diagnosis while still being illegal as pre-trade features.
 
-=== Step 3: design the split
+This distinction keeps the explanatory dataset and the production feature set
+from being confused.
 
-Use chronological holdouts, preserving each parent order as one unit. If the
-same symbols occur throughout history, add a symbol-group or liquidity-bucket
-analysis to distinguish temporal generalization from cross-sectional
-memorization.
+=== Then design the validation scheme
 
-=== Step 4: fit the baseline ladder
+Split chronologically by parent order. Keep every child message and fill from a
+parent on the same side of the split. Use at least one untouched future period.
+If there are many instruments, add a grouped analysis by product or liquidity
+bucket so that good performance cannot be attributed entirely to memorized
+instrument effects.
 
-Fit:
+If roll periods are especially important, make sure the validation design
+contains enough roll observations to say something meaningful about them.
 
-1. unconditional mean;
-2. relative size only;
-3. size + intended participation;
-4. add spread and volatility;
-5. add time-of-day effects;
-6. add smooth nonlinear terms;
-7. add economically motivated interactions;
-8. only then compare a flexible ML model.
+=== Fit the baseline ladder
 
-Record train and validation performance at every step.
+Begin with the mean. Add relative size. Add intended participation. Add spread
+and volatility. Add smooth nonlinear terms. Add a small number of economically
+motivated interactions. Only then compare a high-capacity model.
 
-=== Step 5: interpret incremental gains
+Record the same out-of-sample metrics at each step. More importantly, record
+what question each step answers.
 
-Suppose size alone gives $R^2=0.15$. Adding participation raises it to $0.24$.
-Adding spread and volatility raises it to $0.38$. Time of day adds only $0.01$
-after those variables.
+Suppose size alone gives $R^2=0.15$, adding participation raises it to $0.24$,
+and adding spread and volatility raises it to $0.38$. Time of day adds only
+$0.01$ after those variables are included.
 
-That is an interesting result. Raw slippage may vary strongly by time of day,
-yet little incremental information remains after controlling for liquidity and
-volatility. The apparent clock effect may therefore be largely a composition
-effect.
+That result suggests a useful hypothesis: much of the raw time-of-day pattern in
+cost may be a composition effect caused by intraday changes in spread,
+volatility, and liquidity. The clock itself may have limited incremental
+predictive value after market state is measured.
 
-The opposite result would motivate a different investigation. If time of day
-still adds substantial out-of-sample information after rich liquidity controls,
-there may be participant-mix, auction, information-arrival, or benchmark effects
-not represented by the current state variables.
+If time of day still added a large stable gain, the next question would be what
+mechanism the clock is proxying for: participant mix, auction proximity,
+benchmark demand, information arrival, or something else.
 
-=== Step 6: interrogate residuals
+=== Diagnose the remaining errors
 
-Suppose the model systematically underpredicts large orders near futures rolls.
-Do not immediately add model capacity everywhere.
+Now suppose the model underpredicts large orders near futures rolls. Do not add
+capacity everywhere.
 
-Slice the error by days-to-roll, contract, relative depth, front-versus-next
-volume share, and spread. Ask whether the problem is missing state, denominator
-error, or lack of support.
+Slice residuals by days to roll, front-contract volume share, next-contract
+volume share, relative depth, spread, and product. Check whether the relative
+size denominator is based on the wrong liquidity pool. Check whether historical
+orders in that region are sparse. Check whether the front and next contracts
+should be represented jointly.
 
-If a simple regime flag removes most of the bias, a universal high-capacity
-model may have been solving the wrong problem.
+If a simple roll-state variable removes most of the bias, the original failure
+was not that the model lacked enough parameters. It lacked the right state.
 
-=== Step 7: test stability
+=== Test stability, not just average accuracy
 
-Refit across time windows and products. Compare the size and participation
-relationships. If they shift materially, ask whether the model should be
-hierarchical, regime-dependent, or periodically recalibrated.
+Refit across time windows. Compare the fitted size and participation
+relationships. If the parameters or partial effects move materially, ask
+whether the difference is sampling noise, a measurable regime effect, or genuine
+structural change.
 
-=== Step 8: test the decision
+A production model may then need partial pooling across products, an explicit
+regime variable, or scheduled recalibration.
 
-Pass candidate models into the schedule optimizer. Compare the schedules they
-produce over a grid of size, spread, volatility, and alpha assumptions.
+=== Finally, test the optimizer
 
-A model that improves average $R^2$ by one point but creates implausible
-marginal-cost gradients may be worse for the trading system.
+Feed each candidate cost model into the scheduling optimizer. Evaluate the
+resulting schedules over realistic combinations of size, volatility, spread,
+alpha decay, and time remaining.
 
-This workflow turns model fitting into a sequence of questions about market
-behavior.
+A model that improves $R^2$ from 0.44 to 0.45 but creates sharp, implausible
+changes in optimal participation may be a worse control model. A slightly less
+accurate model with smooth and economically sensible marginal costs may produce
+a better trading policy.
 
-== Build intuition by constructing worlds where you know the answer
+At this point the research conclusion is richer than "Model B wins." We have a
+view of which mechanisms explain cost, where the model is supported, how stable
+the relationships are, and what model errors do to execution decisions.
 
-One of the fastest ways to develop modeling intuition is to create synthetic
-data-generating processes and then deliberately break them.
+== Synthetic experiments are one of the fastest ways to build intuition
+
+Real market data are difficult because the true data-generating process is
+unknown. Synthetic data let us build worlds where the answer is known and then
+observe the fingerprints of specific failures.
 
 Start with
 
@@ -898,235 +970,213 @@ $
   Y = 3 X_1 + epsilon.
 $
 
-Fit a linear model. Then add an irrelevant predictor. Then add a predictor
-highly correlated with $X_1$. Watch prediction stability and coefficient
-stability diverge.
+Fit a linear model. Then add an irrelevant predictor. Then add a predictor that
+is highly correlated with $X_1$. Prediction may remain stable while individual
+coefficients become unstable. That exercise makes multicollinearity concrete.
 
-Next create
+Next simulate
 
 $
   Y = 3 X_1 + 2 X_1^2 + epsilon.
 $
 
-Fit a straight line and examine residual curvature. Add a quadratic term or
-spline and watch the pattern disappear.
+Fit a straight line and predict, before looking, what the residual plot should
+look like. Add the quadratic term or a spline and see whether the structure
+disappears.
 
-Then create an interaction:
+Then simulate an interaction,
 
 $
   Y = 2 X_1 + X_2 + 4 X_1 X_2 + epsilon.
 $
 
-Ask whether marginal plots reveal it. Fit an additive model, inspect structured
-residuals, then add the interaction.
+Fit an additive model. Examine where it fails. Add the interaction and observe
+what changes in residuals and validation error.
 
-Continue by introducing one pathology at a time:
+Once these basic cases are familiar, introduce one pathology at a time:
+measurement error, heavy-tailed noise, heteroskedasticity, omitted variables,
+selection, serial dependence, regime shifts, label leakage, grouped
+observations, and action-dependent sampling.
 
-- heteroskedastic noise;
-- heavy-tailed errors;
-- measurement error in $X$;
-- measurement error in $Y$;
-- omitted confounders;
-- correlated irrelevant variables;
-- missing-not-at-random observations;
-- duplicated or grouped observations;
-- regime shifts;
-- serial dependence;
-- label leakage;
-- selection based on the action.
+The important part is to make a prediction before fitting. Write down what you
+expect to happen to coefficients, train error, validation error, residuals, and
+uncertainty. Then compare the fitted result with that expectation. Modeling
+intuition develops from the mismatch between what you thought would happen and
+what actually happened.
 
-Because you know the true process, you can connect each failure mechanism with
-its empirical fingerprint. After enough repetition, seeing that fingerprint in
-real data begins to trigger the right questions automatically.
+== Keep a research log that records reasoning, not just scores
 
-#research[
-  Before fitting each synthetic experiment, write down what you expect to
-  happen to coefficients, train error, validation error, residuals, and
-  uncertainty. The prediction is what builds intuition. Merely observing the
-  output after fitting builds much less.
-]
+A sequence of experiments is useful only if understanding accumulates with it.
+For every meaningful change, record the question being tested, the hypothesis,
+the single important change, the expected result, the actual result, and what
+the result implies for the next experiment.
 
-== Keep a research log
+For example:
 
-A modeling project becomes much more informative when each experiment has an
-explicit reason.
+> *Question.* Why does the baseline cost model underpredict large orders in high
+> volatility?
+>
+> *Hypothesis.* The size effect steepens with volatility.
+>
+> *Experiment.* Add a size-by-volatility interaction while leaving the data and
+> validation split unchanged.
+>
+> *Prediction.* High-volatility residual bias should shrink more than
+> low-volatility bias, with only modest change elsewhere.
+>
+> *Result.* The bias shrinks near the center of the sample but remains large for
+> the largest orders.
+>
+> *Interpretation.* The interaction helps, but lack of support or another
+> liquidity variable is probably still important.
 
-For every meaningful fit, record:
+This kind of log prevents the common situation where dozens of models have been
+fit but nobody can say what was learned from model 17 that was not already known
+from model 6.
 
-- *Question:* what uncertainty are we trying to resolve?
-- *Hypothesis:* what do we expect and why?
-- *Change:* what single modeling or data change are we making?
-- *Prediction:* what should happen if the hypothesis is correct?
-- *Result:* what happened on the predetermined validation set?
-- *Diagnosis:* what does that imply about the phenomenon or model?
-- *Next experiment:* what is now the most valuable uncertainty to resolve?
+A worse score can still be an informative result. If a feature believed to
+measure liquidity adds nothing once spread and depth are present, we have learned
+that it carries little incremental information in the current representation.
+If a strong random-split result disappears under a forward split, we have
+learned that the relationship was unstable or that the original validation was
+too easy.
 
-This prevents the common pattern of accumulating dozens of models without
-accumulating understanding.
+== A practical sequence for an unfamiliar modeling problem
 
-A good experiment can be valuable even when the score becomes worse. If a
-feature thought to represent liquidity contributes nothing once spread and
-depth are included, that result refines the mechanism map. If an apparently
-strong signal disappears under a forward split, the experiment discovered
-instability.
+When faced with a new phenomenon, the workflow is less mysterious than it first
+appears.
 
-== A compact decision framework
+Begin by writing the research question in ordinary language without naming an
+algorithm. Define the population, response, observation unit, information set,
+and eventual use. Then describe how the observations could have been generated,
+including the actions and latent variables that might create selection or
+confounding.
 
-When a model disappoints, ask the questions in order.
+Build the simplest research table that respects timing. Establish a validation
+scheme that resembles deployment. Fit a baseline that is almost embarrassingly
+simple. Add mechanisms one at a time or in coherent groups. Examine not only the
+score but how the residual structure changes.
 
-=== 1. Is the target meaningful?
+When the model fails, decide whether the failure looks like missing structure,
+estimation variance, measurement noise, lack of support, or distribution shift.
+Increase complexity only when a specific failure motivates it. When the model is
+intended for a decision, evaluate the decision directly.
 
-Would success on this metric actually answer the research or trading question?
-Is the label contaminated by unrelated noise or an inappropriate benchmark?
-
-=== 2. Is the sample representative?
-
-What population generated the data? What filters or selection rules are hidden
-in it? Are the difficult cases missing?
-
-=== 3. Is the information set legitimate?
-
-Could every feature have been known at prediction time? Are preprocessors and
-feature selectors fitted only on training data?
-
-=== 4. Does the validation mimic deployment?
-
-Are we testing the kind of novelty the model will actually encounter: future
-time, new symbols, new regimes, or new clients?
-
-=== 5. Does a simple baseline work?
-
-If not, is there evidence that the available features contain signal at all?
-
-=== 6. Where does the residual structure live?
-
-Slice errors according to mechanisms. Look for curvature, interactions,
-heteroskedasticity, regime bias, and lack of support.
-
-=== 7. Is the bottleneck bias, variance, or noise?
-
-Use train-validation gaps, learning curves, resampling stability, and residual
-patterns.
-
-=== 8. What is the smallest experiment that distinguishes competing explanations?
-
-Do not change six things at once. If the hypothesis is that volatility modifies
-the size effect, test that interaction directly.
-
-=== 9. Does the improvement survive out of sample?
-
-An in-sample story is a hypothesis generator. A stable out-of-sample result is
-evidence.
-
-=== 10. Does it improve the downstream decision?
-
-For trading models, evaluate schedules, risk, tail behavior, and policy
-stability - not just average prediction error.
+The goal is not to follow these steps mechanically. With experience, many of
+them happen almost simultaneously. The important skill is being able to explain
+why the next experiment is the most informative one.
 
 == What mature modeling intuition looks like
 
-The end goal is not to memorize a table of rules. It is to compress experience
-into fast, testable hypotheses.
+Modeling intuition is not a collection of memorized rules. It is a library of
+failure patterns and plausible explanations.
 
-When train error is tiny and future error is poor, you should instinctively
-think about variance, leakage, and distribution shift.
+If training error is tiny and future error is poor, variance, leakage, and
+regime mismatch should come to mind quickly.
 
-When coefficients swing while predictions remain stable, think about correlated
-features and weak parameter identification.
+If coefficients swing across samples while predictions remain stable,
+correlated representations and weak parameter identification are plausible.
 
-When a strong raw time-of-day pattern vanishes after controlling for spread and
-volatility, think about composition rather than immediately declaring a causal
+If a strong raw time-of-day pattern disappears after controlling for spread and
+volatility, composition should be considered before declaring a structural
 clock effect.
 
-When errors are concentrated in a sparse region, think about support before
-adding global model capacity.
+If residuals are concentrated in a sparse state-action region, lack of support
+should be investigated before adding global model capacity.
 
-When additional data help only in already well-sampled regions, think about
-targeted data collection.
+If a flexible model barely improves on a smooth additive model, the phenomenon
+may be largely low-dimensional and nonlinear rather than dominated by complex
+interactions.
 
-When a flexible model barely beats a smooth additive model, think that the
-phenomenon may be mostly low-dimensional and nonlinear rather than governed by
-complicated interactions.
+If prediction improves while the optimizer becomes unstable, attention should
+shift from global prediction error to local slopes, curvature, extrapolation,
+and decision-aware validation.
 
-When prediction improves but the optimizer becomes unstable, think about local
-shape, derivatives, and decision-aware validation.
-
-These reactions are not innate. They are learned by repeatedly making a
-prediction about what should happen, fitting the model, examining the failure,
-and updating the mental picture of the data-generating process.
+These reactions become fast only after repeated practice. The researcher forms
+a hypothesis, predicts what the data should look like if it is true, runs a
+controlled experiment, and updates the mental model. Over time, that loop is
+what turns statistical techniques into modeling judgment.
 
 == Interview checks
 
 #interview[
   *You inherit a dataset and are asked to predict execution cost. What do you do
-  before choosing a model?* Define the response, population, observation unit,
-  timing contract, intended use, plausible data-generating process, and
-  validation scheme. Then establish simple baselines.
+  before choosing a model?* Define the economic response, population,
+  observation unit, information available at prediction time, intended use,
+  plausible data-generating process, and deployment-aligned validation scheme.
+  Then establish simple baselines before increasing model capacity.
 ]
 
 #interview[
   *Training and validation error are both high. Should you collect more data?*
-  Not automatically. First determine whether residuals contain structured error
-  suggesting misspecification or missing state. If both curves have plateaued
-  and residuals are largely structureless, more of the same data may provide
-  little individual-level predictive improvement.
+  Not automatically. First inspect residual structure and learning curves. If
+  the current model is systematically misspecified, more of the same data may
+  only estimate the wrong relationship more precisely. If the learning curve is
+  still improving and the model is variance-limited, additional relevant data
+  can help. If residuals are largely structureless, better measurements or a
+  different target may matter more.
 ]
 
 #interview[
-  *A feature increases in-sample $R^2$ but not forward out-of-sample $R^2$.
-  What does that suggest?* It may be weak, unstable, regime-specific, or
-  exploiting noise. Check temporal stability, feature construction, overlap,
-  multiple-testing effects, and whether the relationship exists in the
-  deployment period.
+  *A feature increases in-sample $R^2$ but not forward-test $R^2$. What have you
+  learned?* The feature may be weak, unstable, regime-specific, correlated with
+  existing variables, or exploiting noise. Check feature timing, temporal
+  stability, overlap, and whether repeated feature searching has overfit the
+  validation process.
 ]
 
 #interview[
-  *A boosted tree beats a linear model substantially. What have you learned?*
-  Only that the flexible model captures predictive structure the linear
-  specification misses. Determine whether the gain comes from smooth
-  nonlinearity, thresholds, interactions, entity effects, or leakage before
-  drawing a substantive conclusion.
+  *A boosted tree substantially beats a linear model. What does that prove?*
+  It proves that the flexible model captures predictive structure missed by the
+  linear specification on the chosen validation design. It does not reveal the
+  source of the gain. The next step is to determine whether the improvement
+  comes from nonlinear main effects, interactions, regime partitions, entity
+  effects, or leakage.
 ]
 
 #interview[
-  *A coefficient is statistically significant but removing the feature barely
-  changes out-of-sample performance. Is the feature important?* It can be
-  associated with the response while adding little incremental predictive
-  information, especially when correlated variables already carry the same
-  signal. “Important” must be defined relative to explanation, prediction, or
-  causal interpretation.
+  *Why can a model with lower RMSE be worse for an execution optimizer?* Because
+  optimization depends on the shape of the fitted cost surface in the region of
+  candidate actions. Small local errors in slope or curvature can change the
+  selected schedule even when average prediction error is lower.
 ]
 
 == Exercises
 
 1. Take a parent-order slippage dataset and write the modeling problem in one
-   paragraph without naming any algorithm. Specify response, population,
+   paragraph without naming any algorithm. Specify the response, population,
    observation unit, information set, validation target, and deployment use.
-2. Draw a data-generating diagram for cost containing latent urgency, intended
+2. Draw a data-generating diagram containing latent urgency, intended
    participation, realized participation, volatility, market movement, and
-   shortfall. Identify which relationships make realized participation difficult
-   to interpret causally.
-3. Construct a model ladder for slippage beginning with the unconditional mean.
-   For every rung, write one sentence describing what a material out-of-sample
-   improvement would teach you.
-4. Simulate two highly correlated predictors with only one true latent factor.
-   Show how coefficient estimates can be unstable while predictions remain
-   stable.
-5. Simulate a nonlinear size effect and fit a linear model. Predict the shape of
-   the residual plot before computing it. Add a spline and explain what changes.
-6. Create a regime shift in which the sign of one relationship changes halfway
-   through the sample. Compare a random split with a chronological split and
-   explain why they answer different questions.
+   arrival shortfall. Explain why realized participation is difficult to
+   interpret causally.
+3. Build a model ladder for execution cost beginning with the unconditional
+   mean. For each rung, write what a material out-of-sample improvement would
+   teach you about the phenomenon.
+4. Simulate two highly correlated predictors that measure one latent factor.
+   Compare coefficient stability with prediction stability across resamples.
+5. Simulate a concave size effect, fit a linear model, and sketch the residual
+   pattern you expect before calculating it. Then add a spline and compare.
+6. Create a regime shift in which one feature's relationship with the target
+   changes halfway through the sample. Compare a random split with a
+   chronological split and explain why they answer different questions.
 7. Suppose adding 500,000 small liquid orders barely changes error on large
-   illiquid orders. Design a data-collection strategy that is more likely to
-   help the region relevant to the optimizer.
-8. Compare two models with almost identical RMSE but different smoothness in
-   participation. Describe an experiment that evaluates which model is safer for
-   schedule optimization.
+   illiquid orders. Design a data-collection strategy that targets the region
+   relevant to the optimizer.
+8. Construct two cost models with similar RMSE but different curvature in
+   participation. Pass both through a simple schedule optimizer and compare the
+   resulting policies.
+9. Take one feature normalization, such as $Q/"ADV"$, and state the invariance
+   assumption it implicitly makes. Design a diagnostic that tests whether that
+   assumption is approximately valid across liquidity buckets.
+10. For a production model of your choice, create a research log containing
+    five sequential experiments. Each experiment should have a hypothesis and a
+    predicted diagnostic outcome before the model is fit.
 
 == Where the book goes next
 
-A disciplined modeling process still depends on the table supplied to it. The
-next chapter moves beneath the dataframe and reconstructs how parent orders,
-child messages, fills, quotes, trades, reference data, and several clocks become
-observations that a statistical model is allowed to learn from.
+A careful modeling process is still only as trustworthy as the observations
+supplied to it. The next chapter moves below the research dataframe and asks how
+parent orders, child messages, fills, quotes, trades, reference data, and
+multiple clocks should be reconstructed into a dataset without destroying the
+timing and economic meaning on which the statistical analysis depends.
