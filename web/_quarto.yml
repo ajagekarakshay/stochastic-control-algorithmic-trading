@@ -125,9 +125,9 @@ format:
     code-fold: false
     code-overflow: wrap
     grid:
-      sidebar-width: 260px
+      sidebar-width: 320px
       body-width: 740px
-      margin-width: 260px
+      margin-width: 280px
       gutter-width: 1.75rem
     include-after-body: assets/book.js
 
