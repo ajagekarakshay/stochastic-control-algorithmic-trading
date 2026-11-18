@@ -1,0 +1,395 @@
+---
+source-typst: "chapters/04-execution-data.typ"
+chapter-number: 5
+draft-status: "First draft"
+---
+
+# Execution Data: From Market Events to Research Tables {#ch-execution-data}
+
+At 10:07:00.004, the execution system records a child-order submission. The market-data feed shows the best ask changing at 10:07:00.003, an exchange acknowledgment arrives at 10:07:00.006, and the first fill is stamped 10:07:00.005 by the venue. Which quote did the algorithm see? Which quote was available when the order reached the market? Did the order cause the displayed size to change, or did another participant trade first?
+
+A dataframe does not answer these questions merely because every row has a timestamp. The records were produced by different systems, at different points in an order’s life, with different clocks and revision policies. Turning them into research data requires reconstructing what happened and what could have been known at each decision.
+
+This chapter follows one execution from raw messages to a parent-order research row. The goal is not to prescribe a particular database schema. It is to develop the habits that make a dataset economically interpretable, temporally valid, and reproducible.
+
+## The event tape is not yet a dataset
+
+Raw execution data usually arrives as several related streams:
+
+- client or order-management records describing the parent instruction;
+
+- algorithm logs describing decisions, parameters, and internal state;
+
+- order-management messages for submissions, acknowledgments, replaces, cancellations, rejects, and fills;
+
+- quote and depth updates describing displayed liquidity;
+
+- public trade records describing prints and corrections;
+
+- venue, security-master, corporate-action, and calendar reference data; and
+
+- derived feeds such as volatility, volume forecasts, or benchmark prices.
+
+Each stream is locally meaningful. The research problem appears when they are joined. The fill knows an exchange order identifier but not necessarily the client objective. The parent order knows requested quantity but not the queue ahead of each child. The market-data feed sees displayed trades but may not identify which public print corresponds to the algorithm’s private fill.
+
+The first task is therefore not feature engineering. It is entity and event reconstruction.
+
+::: {.book-callout .book-intuition}
+**Intuition** Market data resembles a set of witness statements. Each record describes one part of the event from one system’s perspective. A research table is the investigator’s reconstruction. Its reliability depends on the joins, clock assumptions, and state rules used to reconcile those statements.
+:::
+
+## Name the entities before joining them
+
+Several identifiers can refer to different layers of the same economic order.
+
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+| **Entity**                       | **Typical identifier**                                | **Economic meaning**                                              |
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+| Parent order                     | client or strategy order ID                           | The quantity and objective entrusted to the algorithm             |
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+| Decision                         | decision-cycle or slice ID                            | One policy evaluation within the parent episode                   |
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+| Child order                      | internal order ID                                     | A venue-bound instruction with price, size, and lifetime          |
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+| Venue order                      | exchange order reference                              | The venue’s accepted representation of that child                 |
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+| Execution                        | fill or match ID                                      | A transfer of quantity at a price                                 |
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+| Market event                     | channel sequence and event ID                         | A public book or trade update                                     |
++----------------------------------+-------------------------------------------------------+-------------------------------------------------------------------+
+
+One parent can generate many decisions; one decision can generate several child orders; one child can be replaced and receive a new venue identifier; one child can have many partial fills. A fill table joined directly to a parent table can silently multiply rows if the relationship is not one-to-many in the expected direction.
+
+Define primary keys and uniqueness assertions for every entity. Keep mapping tables rather than repeatedly inferring relationships from timestamps, symbols, and quantities. If a relationship is probabilistic or heuristic, preserve its match confidence and rule version instead of presenting it as an exact key.
+
+## An order is a lifecycle, not a static row
+
+Consider a child order submitted for 20,000 shares. It may be acknowledged for 20,000, partially fill 8,000, be replaced down to 7,000 remaining, fill another 5,000, and then be cancelled. A final row saying `filled=13,000` loses the path that determined queue priority, exposure, and non-fill risk.
+
+Represent the lifecycle as ordered events. Let $R_{n}$ be remaining live quantity immediately after event $n$. A simplified state update is
+
+$$R_{n} = R_{n - 1} + A_{n} - X_{n} - C_{n},$$
+
+where $A_{n}$ is newly accepted quantity, $X_{n}$ executed quantity, and $C_{n}$ cancelled quantity during the event. Replace messages need venue-specific treatment: some reduce quantity while retaining priority; others cancel and add a new order.
+
+State transitions should obey invariants. Remaining quantity cannot be negative. An execution cannot precede venue acceptance under the exchange clock. A terminal cancel plus cumulative fills should reconcile to accepted quantity, allowing for explicit busts and corrections. Duplicate messages should not double the state.
+
+The Nasdaq ITCH specification illustrates why message semantics matter: add, execute, execute-with-price, cancel, delete, replace, and trade messages do not all change the displayed book in the same way [@nasdaq2023]. A parser that treats every print as book depletion or every disappearance as a trade constructs a different market than the venue reported.
+
+## There are several timestamps for one event
+
+An order submission can carry:
+
+- strategy decision time;
+
+- local send time;
+
+- gateway receipt and transmit times;
+
+- venue receive and acknowledgment times;
+
+- exchange event time;
+
+- market-feed publication time;
+
+- local feed-receipt time; and
+
+- database ingestion time.
+
+These are not redundant copies. They locate the event along a causal path. Exchange time helps order events on one venue. Local receipt time describes what the algorithm could have observed. Ingestion time helps debug pipeline delay but should not substitute for market time.
+
+For source $s$, a useful clock model is
+
+$$t_{s,n}^{\text{local}} = t_{n}^{\text{true}} + \delta_{s}\left. \left( t_{n}^{\text{true}} \right) \right. + \ell_{s,n},$$
+
+where $\delta_{s}$ is clock offset or drift and $\ell_{s,n}$ is transport and processing latency. Clock synchronization reduces $\delta_{s}$ but does not remove variable latency. Precision printed to nanoseconds is not evidence of nanosecond accuracy.
+
+::: {.book-callout .book-research}
+**Research warning** Never sort heterogeneous feeds by a timestamp column without first defining what that timestamp means. A venue event time and a local receipt time answer different questions. Their numerical ordering can reverse even when both are correct.
+:::
+
+## Sequence numbers often matter more than timestamps
+
+Market-data channels commonly provide sequence numbers so receivers can detect gaps and preserve message order. Within one sequenced channel, sequence order is usually the authoritative ordering even when several messages share a timestamp.
+
+Suppose observed sequence numbers jump from 81,204 to 81,209. The book state after the gap is not trustworthy merely because processing can continue. Missing messages may contain adds, cancellations, or executions at the best price. The pipeline should mark the affected interval invalid, recover a snapshot or retransmission, and begin a new known-good state only under an explicit rule.
+
+Cross-channel order is harder. Two venue feeds do not share a global sequence. A consolidated view therefore depends on receipt time, synchronization, and the consumer’s latency. For router research, reconstruct the view available at the router rather than an impossible perfectly synchronized national book assembled afterward.
+
+## Reconstructing a book is event sourcing
+
+An order-by-order book begins from a known snapshot or empty session state and applies each valid message in sequence. Let $\mathcal{B}_{n}$ denote the book after event $n$ and $e_{n}$ the decoded message. Then
+
+$$\mathcal{B}_{n} = \Phi\left. \left( \mathcal{B}_{n - 1},e_{n} \right) \right.,$$
+
+where $\Phi$ is a deterministic transition function implementing venue rules.
+
+This event-sourced representation provides two valuable tests. First, replaying the same messages should produce the same state. Second, periodic snapshots or top-of-book feeds can be compared with the reconstructed book. A mismatch marks a concrete interval for investigation rather than becoming an unexplained model residual months later.
+
+Order-by-order data can reveal queue mechanics, but it is not omniscient. Hidden quantity, reserve replenishment, undisplayed orders, and priority rules may remain partially observed. A clean reconstruction of displayed state should not be relabeled as the complete supply curve.
+
+## Match quotes using the information set you intend to study
+
+Suppose a fill occurs at time $t_{f}$. A standard backward as-of match chooses the latest eligible quote no later than a cutoff:
+
+$$n^{\star} = \arg\max\limits_{n}\left. \left\{ t_{n}^{\text{quote }}:t_{n}^{\text{quote }} \leq t_{f} - \delta \right\} \right.,$$
+
+where $\delta$ represents any required latency or processing allowance. The matched quote is $Q_{n^{\star}}$.
+
+The cutoff depends on the question. For an ex post effective-spread calculation, exchange timestamps may be appropriate if the feeds are synchronized. To reconstruct what the strategy knew when it decided, use locally received data strictly before decision time. To approximate the state when the venue received the order, account for outbound latency and avoid using an acknowledgment that arrived afterward.
+
+Forward matching is dangerous because it can select a quote produced by the fill itself. Nearest-neighbor matching can also choose the future whenever the future quote is closer. A high match rate is not a virtue if it is achieved by violating the information boundary.
+
+## Quote age belongs beside every matched quote
+
+Let $t_{q}$ be the timestamp of the matched quote under the chosen clock. Define
+
+$$a^{\text{quote }} = t_{\text{decision}} - t_{q}.$$
+
+The quote may be chronologically valid and still economically stale. A 200-ms old quote can be reasonable in an inactive instrument and useless in a fast equity. Use both a maximum age rule and a state-dependent diagnostic: quote age relative to recent message intensity, spread changes, or volatility.
+
+Do not simply delete stale matches. Staleness may concentrate in illiquid symbols, feed outages, opening periods, or stressed markets. Report the missing or stale rate by the same segments used to evaluate the model. Otherwise a “clean” dataset quietly excludes the states in which execution is hardest.
+
+## Public trades and private fills are different records
+
+A private fill confirms that the algorithm traded. A public trade record describes what the market publishes. The two may differ in identifiers, timing, quantity aggregation, price conditions, and correction handling. Some undisplayed executions generate trade messages without having appeared as standing displayed orders; some auction or cross messages follow distinct semantics.
+
+Avoid deduplicating solely on symbol, price, quantity, and timestamp. Two genuine fills can share all four. Prefer stable match identifiers or venue execution references. When no exact relation exists, separate private-fill analysis from public-volume construction and document the heuristic used for reconciliation.
+
+Trade-sign classification introduces another layer. If aggressor side is not provided, quote-based or tick-based rules estimate it. Classification error is most likely around locked markets, quote changes, midpoint prints, and reporting delays. Preserve the rule and an uncertainty flag; do not treat an inferred sign as exchange truth.
+
+## Parent-order reconstruction requires an economic boundary
+
+Internal systems may create a new parent identifier after a pause, amend, venue transfer, or overnight continuation even when the investment intent persists. Conversely, one identifier may contain several economically distinct waves.
+
+A parent reconstruction rule should specify:
+
+- common client or strategy intent;
+
+- side and instrument consistency;
+
+- quantity amendments and cancellations;
+
+- acceptable time gaps;
+
+- benchmark and deadline continuity;
+
+- treatment of pauses and restarts; and
+
+- cross-day or cross-contract behavior.
+
+For proprietary market-impact studies built from public trades, the true parent order is latent. A metaorder algorithm groups signed activity using assumptions about participant identity and gaps. That reconstructed unit is an estimator, not observed ground truth. Sensitivity to grouping thresholds belongs in the empirical result.
+
+## Sampling chooses which dynamics remain visible
+
+Event data can be represented in event time, calendar time, or volume time. Each choice preserves some structure and suppresses another.
+
+An event-time table advances after every qualifying update. It is natural for queue depletion, message intensity, and next-price-move models. A calendar-time table samples the state at regular intervals and is natural for risk, latency, and scheduled decisions. A volume-time table advances with market volume and is natural for participation and intraday liquidity comparisons.
+
+If $N(t)$ counts qualifying events and $V(t)$ is cumulative market volume, three indices are
+
+$$k^{\text{calendar }}(t) = \left\lfloor \frac{t}{\Delta} \right\rfloor,\quad k^{\text{event }}(t) = N(t),\quad\tau_{V}(t) = \frac{V(t)}{V(T)}.$$
+
+The realized volume-time denominator $V(T)$ is available retrospectively. A live feature must replace it with a forecast and preserve forecast error.
+
+Sampling every second does not make events within the second independent. Nor does aggregation remove microstructure bias automatically. Choose the unit based on the model’s decision horizon, then measure how conclusions change with reasonable alternatives.
+
+## Missingness has a mechanism
+
+Missing values arise for different reasons: a feed is unavailable, a symbol has no displayed quote, a venue does not publish a field, an order never fills, a reference-data mapping fails, or a logging branch was not executed for one algorithm version. These mechanisms carry different information.
+
+For variable $X_{j}$, let $R_{j} = 1$ indicate that the value is observed. Missing completely at random asserts
+
+$$R_{j} \perp \left. \left( X_{j},Y,Z \right) \right.,$$
+
+an unusually strong claim in execution data. More often, observation depends on measured state or on the missing value itself. Depth may be absent precisely in a market state with no displayed liquidity; a fill-derived feature is missing when no fill occurred.
+
+Use explicit missingness indicators when the mechanism can affect the outcome, but do not let them conceal pipeline failures. Separate “not applicable,” “not observed,” “invalid,” and true numerical zero. A zero spread, zero depth, and missing quote are economically different states.
+
+## Cancellation and non-completion create censoring
+
+Suppose the target is time to passive fill. If an order is cancelled after 30 seconds without filling, its fill time is not 30 seconds. We only know that the latent time under continued posting exceeded 30 seconds, and even that statement requires assuming the market path would be unchanged by continued exposure.
+
+With fill time $T^{\text{fill}}$ and cancellation time $T^{\text{cancel}}$, the observed data can be written
+
+$$\widetilde{T} = \min\left. \left( T^{\text{fill}},T^{\text{cancel}} \right) \right.,\quad\Delta = 1\left. \left\{ T^{\text{fill }} \leq T^{\text{cancel}} \right\} \right..$$
+
+Survival methods can handle right censoring when censoring is conditionally independent given the modeled state. Algorithmic cancellation is often informative: the policy cancels because imbalance, queue position, or alpha has changed. The cancellation mechanism must then be modeled or included as part of the policy being evaluated.
+
+Parent-order non-completion is similar. An incomplete order has not revealed the price of the missing fills. Chapter 3 showed how opportunity-cost marks can keep the residual in the accounting. Chapter 7 will return to statistical models for selection and censoring.
+
+## Corporate actions change units as well as prices
+
+Stock splits, dividends, symbol changes, mergers, and listings can break a time series even when every event is parsed correctly. A two-for-one split halves the price and doubles shares; an unadjusted history creates a false return, volume jump, and order-size change.
+
+Keep raw and adjusted fields separately. Adjustment factors should be point-in- time versioned and applied consistently to price, shares, volume, and notional. For execution reconstruction on the event date, raw tradable units are usually required. For cross-date statistical features, adjusted series may be useful. Never join an adjusted daily denominator to an unadjusted order quantity.
+
+Reference data also changes through time. Tick size, listing venue, contract multiplier, trading calendar, and session hours must be effective-dated. Joining today’s security master to historical events can rewrite the past.
+
+## Futures rolls require contract-level data
+
+A continuous futures series is convenient for charts but dangerous for execution research. The tradable objects are expiry-specific contracts. Their prices, volume, depth, tick value, and participant mix differ, especially while liquidity migrates from the front contract to the next.
+
+Preserve at least:
+
+- root symbol and exact expiry;
+
+- contract multiplier and tick size;
+
+- days to expiry and first/last trading dates;
+
+- front, next, and other liquidity ranks at the observation time;
+
+- volume and depth by expiry;
+
+- roll-calendar state and basis between contracts; and
+
+- whether the execution used outrights or a listed calendar spread.
+
+Back-adjustment can remove a visible price jump between expiries, but it does not make their liquidity states identical. An impact model trained on a stitched series can underestimate cost near rolls if the denominator pools volume across contracts or assigns the front contract’s liquidity to an order in the next.
+
+::: {.book-callout .book-takeaway}
+**Control implication** Contract identity is part of the execution state, not a nuisance column to be erased during cleaning. Around a roll, choosing which expiry or spread to trade is itself a control decision.
+:::
+
+## Live data and corrected data describe different information sets
+
+Historical vendors may correct trades, fill gaps, revise corporate actions, and publish final daily volume. Those corrections improve retrospective truth. They can also create a research dataset that was unavailable to the live algorithm.
+
+Maintain two explicit views when possible:
+
+- an **as-known** view containing values available at each decision time; and
+
+- a **final** view containing corrected records used for reconciliation and definitive accounting.
+
+Features for a deployable model come from the as-known view. Labels may come from the final view if the target is defined after corrections, provided their completion and revision times determine the split and embargo. Comparing the views also measures data-revision risk.
+
+## Leakage occurs through joins, filters, and denominators
+
+Obvious leakage uses a future return as a feature. More subtle leakage enters through data preparation:
+
+- joining the nearest quote instead of the latest prior quote;
+
+- normalizing size by realized full-day volume;
+
+- using a final volatility estimate that includes the execution window;
+
+- defining a liquidity cluster from the entire sample;
+
+- filtering incomplete orders after observing the outcome;
+
+- assigning a future front-contract label to historical futures rows;
+
+- using corrected reference data before its publication time; or
+
+- splitting child fills from one parent across train and test.
+
+A feature table should record both event time and knowledge time. A leakage-safe join requires
+
+$$t_{j}^{\text{known }} \leq t_{i}^{\text{decision }}$$
+
+for every feature value $j$ attached to decision row $i$. This rule is simple to state and easy to violate through a convenient library default.
+
+## Build the parent-order row in layers
+
+For the running 400,000-share order, a trustworthy parent row is the end of a pipeline, not its starting point.
+
+1.  **Instruction layer:** side, requested quantity, arrival, deadline, benchmark, limits, and intended policy parameters.
+
+2.  **Reference layer:** point-in-time symbol, multiplier, calendar, and corporate- action state.
+
+3.  **Pre-trade market layer:** quote, spread, depth, volatility, forecast volume, and their source timestamps and ages.
+
+4.  **Lifecycle layer:** submitted and accepted child quantity, fills, cancellations, rejects, venue routes, and parameter changes.
+
+5.  **Path layer:** market volume, price trajectory, participation, pauses, auctions, and post-trade markouts.
+
+6.  **Outcome layer:** average price, benchmark prices, shortfall, completion, explicit costs, and opportunity-cost treatment.
+
+Within-order path variables are useful for diagnosis and sequential models. They should not silently become pre-trade features. Keeping the layers separate makes that boundary visible.
+
+## Quality checks should express economic identities
+
+Row counts and null percentages are necessary but weak. Strong tests express facts that must hold if the reconstruction is coherent.
+
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+| **Check**                                 | **Expected relation**                                                      | **Failure often indicates**                          |
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+| Quantity                                  | requested = filled + cancelled or residual under the state rule            | duplicate or missing lifecycle events                |
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+| Cash                                      | sum of fill quantity times price reproduces average price                  | join multiplication or precision error               |
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+| Time                                      | decision precedes send, venue event, and local receipt under stated clocks | clock mismatch or wrong field                        |
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+| Book                                      | depth never becomes negative during replay                                 | gap, duplicate, or wrong message semantics           |
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+| Benchmark                                 | independent recomputation agrees within tolerance                          | trade-filter or interval mismatch                    |
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+| Population                                | daily and symbol counts reconcile across pipeline stages                   | silent filtering or mapping loss                     |
++-------------------------------------------+----------------------------------------------------------------------------+------------------------------------------------------+
+
+Track these checks by date, venue, symbol, and software version. A global failure rate of 0.01% can still mean every record from one venue was wrong for an hour.
+
+## Reproducibility includes the data snapshot
+
+A reproducible model requires more than a notebook and random seed. Record:
+
+- immutable raw-data or snapshot identifiers;
+
+- parser and venue-specification versions;
+
+- reference-data version and effective-date logic;
+
+- reconstruction and filtering code commits;
+
+- feature definitions and knowledge-time rules;
+
+- train, validation, and test membership;
+
+- benchmark and label versions; and
+
+- quality-check results and accepted exceptions.
+
+Derived tables should be rebuildable from immutable inputs. If storage requires incremental processing, use deterministic partitioning and content checks. Late events should create a new version rather than silently mutate the table used by an earlier experiment.
+
+The research log should explain why a filter or join rule changed. A model improvement that follows a data revision may be real, but it is not evidence that the algorithm learned a better market relationship.
+
+## Interview checks
+
+::: {.book-callout .book-interview}
+**Interview check** **A quote feed and fill feed both have nanosecond timestamps. Can you simply join on the nearest time?** No. Define each clock, sequence ordering, latency, and the intended information set. Nearest-time matching can select a quote caused by the fill.
+:::
+
+::: {.book-callout .book-interview}
+**Interview check** **Why is an order cancellation not an observed fill time?** The fill is censored, and cancellation is often an adaptive action correlated with the latent fill probability and adverse-selection state.
+:::
+
+::: {.book-callout .book-interview}
+**Interview check** **Why can a continuous futures series be suitable for return research but unsuitable for execution-cost research?** It can smooth price continuity while erasing expiry-specific volume, depth, basis, multiplier, and liquidity migration that determine executability.
+:::
+
+::: {.book-callout .book-interview}
+**Interview check** **Your model performs extremely well after adding realized daily volume. What do you ask?** Determine when the denominator became known, whether the model is retrospective or deployable, and how forecast-volume error changes the result.
+:::
+
+## Exercises
+
+1.  Write a state machine for submit, acknowledge, partial fill, replace, cancel, reject, trade bust, and terminal completion. State quantity and time invariants for every transition.
+
+2.  Given quote times 10:00:00.001, .006, and .011 and a local decision at .008, compare backward-as-of, nearest, and latency-adjusted matches. Identify which are valid for a live feature.
+
+3.  Design a gap-recovery policy for an order-book feed. Specify invalidation, retransmission or snapshot recovery, and the first time at which downstream features become trustworthy again.
+
+4.  Construct a small example in which joining fills, routes, and quotes on a non-unique key doubles executed quantity. Add key assertions that catch it.
+
+5.  Define an as-known and final-data view for daily volume and corporate actions. Explain which view supplies pre-trade features and which supplies labels.
+
+6.  Design a parent-order reconstruction rule for an order paused for twenty minutes and resumed under a new internal ID. Analyze how two reasonable rules change participation and impact estimates.
+
+7.  Specify a futures research table around a front-to-next roll. Include contract-level denominators, basis, liquidity rank, session boundaries, and an explicit rule for spread executions.
+
+8.  Produce a data-lineage checklist for a model release. Include raw snapshot, code version, feature knowledge times, split membership, filters, label version, and reconciliation tests.
+
+## Where the book goes next
+
+The result of this chapter is not a perfectly cleaned universal table. It is a set of research tables whose rows, clocks, information boundaries, and missing outcomes are explicit. Chapter 6 uses those tables to examine what market impact looks like in the data before choosing a particular estimator.

@@ -1,0 +1,13 @@
+---
+number-sections: false
+---
+
+# Retained source drafts {.unnumbered}
+
+::: {.book-callout .book-definition}
+**Source draft**
+
+Early material retained in the repository, separate from chapters written against the approved architecture.
+:::
+
+- [Optimal Liquidation and Participation Control](optimal-execution.qmd#ch-optimal-execution)

@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 23
+draft-status: "Planned"
+---
+
+# Strategic Traders and Stochastic Games {#plan-ch23}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Explains when market response depends on the beliefs and actions of other strategic participants, not only on exogenous noise.
+
+**Subtopics.** Signaling through order flow; strategic liquidation; predatory trading; information leakage; equilibrium impact; best responses; stochastic differential games; mean-field games; competition among execution algorithms; mechanism design; limits of single-agent control models.

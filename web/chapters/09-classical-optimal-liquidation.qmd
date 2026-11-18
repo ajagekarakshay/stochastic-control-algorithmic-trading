@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 9
+draft-status: "Source draft"
+---
+
+# Classical Optimal Liquidation {#plan-ch09}
+
+::: {.planned-chapter}
+Source draft
+:::
+
+Derives the basic cost-risk trade-off and uses it to explain the shape of an optimal liquidation schedule.
+
+**Subtopics.** Discrete and continuous inventory dynamics; temporary impact; price risk; Bertsimas-Lo; Almgren-Chriss; expected cost and variance; the execution frontier; risk aversion and urgency; boundary conditions; closed-form trajectories; calibration; units and limiting cases; when the classical assumptions fail.

@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 15
+draft-status: "Planned"
+---
+
+# Futures Execution {#plan-ch15}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Treats contract choice, roll dynamics, and economic exposure as part of the execution decision rather than as data-cleaning details.
+
+**Subtopics.** Contract multipliers, tick sizes, and risk-equivalent quantity; margin versus exposure; contract liquidity measures; front and deferred contracts; liquidity migration; roll timing; basis and calendar spreads; outright versus spread execution; continuous-series distortions; session boundaries; expiry effects; roll-aware impact models; two-expiry control; underestimation near rolls.

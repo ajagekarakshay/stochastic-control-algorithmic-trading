@@ -1,0 +1,22 @@
+---
+number-sections: false
+draft-status: Planned
+---
+
+# Appendices {.unnumbered}
+
+## A. Probability and conditional expectation
+
+## B. Martingales, stopping times, and change of measure
+
+## C. Brownian motion, Itô calculus, and jump processes
+
+## D. Dynamic programming, HJB equations, and verification
+
+## E. Convex optimization, KKT conditions, and numerical control
+
+## F. Statistical inference, regularization, and causal estimation
+
+## G. Time-series and event-data methods
+
+## H. Notation, units, and dimensional analysis

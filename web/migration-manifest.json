@@ -1,0 +1,515 @@
+{
+  "documents": [
+    {
+      "source": "chapters/00-preface.typ",
+      "destination": "index.qmd",
+      "source_sha256": "a146601a80f9ba0e26935a758884947b22147d9167da5dc6e01abf18217f8a8f",
+      "prose_sha256": "9de92fee6bd691bbd574770e842e318d9c31234349aecb9a339d2338e8ce3e1e",
+      "math_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "formulas": 0,
+      "structure": {
+        "Header": 2,
+        "BulletList": 1
+      }
+    },
+    {
+      "source": "chapters/01-control-lens.typ",
+      "destination": "chapters/01-execution-problem.qmd",
+      "source_sha256": "01d8e58af9691144eb32e308117f2ed973cd5a3c6ffb79d94bf47a55b03686ca",
+      "prose_sha256": "b88fdc7eb62749e10c9800c1a9dd4f7207f9a28471faac7c7e6f67cb685c3f5c",
+      "math_sha256": "47b2c5f3483feef11e77601176a08c38292ee7f6687286157659fe18d6273316",
+      "formulas": 83,
+      "structure": {
+        "Header": 20,
+        "Table": 2,
+        "BulletList": 4,
+        "OrderedList": 3
+      }
+    },
+    {
+      "source": "chapters/02-microstructure.typ",
+      "destination": "chapters/02-how-markets-absorb-orders.qmd",
+      "source_sha256": "f227213d5907cd51f1e8905b83fd1ccbe7739bb2c1a5e1f96bb25072db113bda",
+      "prose_sha256": "20cde544c4b1852a661d59e78457e73139eb2e2c8be5cdf1eb0cb95dbf162da8",
+      "math_sha256": "4cbeaceee81ded3b9eb1806b0a7ab9b51b4ac2183a89204828c55e0d5e9730fb",
+      "formulas": 73,
+      "structure": {
+        "Header": 22,
+        "Table": 2,
+        "BulletList": 2,
+        "OrderedList": 2
+      }
+    },
+    {
+      "source": "chapters/03-tca-identification.typ",
+      "destination": "chapters/03-execution-cost.qmd",
+      "source_sha256": "c6a98db3247c425b96c80a345967f8ed01937b5817dcb238ff01c32b237a8ed4",
+      "prose_sha256": "dced68f47843ac53a8a0bd573c86e052a36396e2e7df3a4e7cec153fca8e2912",
+      "math_sha256": "a4e6376097ba52ae2e31301e9e883d3da64dc76d3a80e8df8bb5f94265438923",
+      "formulas": 67,
+      "structure": {
+        "Header": 23,
+        "BulletList": 4,
+        "Table": 2,
+        "OrderedList": 3
+      }
+    },
+    {
+      "source": "chapters/03b-modeling-research.typ",
+      "destination": "chapters/04-statistical-modeling.qmd",
+      "source_sha256": "8277b207572b4d26dfdb193ac9a78db083d250d53479264f4f1be15ab1225ba2",
+      "prose_sha256": "d585ee9ffdeb30fbe432ec77c2db838e85323857b0fe75e5f2c62d16cdd5ef66",
+      "math_sha256": "c1e405cd654824eca29b340f89fcd93fcb9a9103df28b871e632def4e998c17a",
+      "formulas": 69,
+      "structure": {
+        "Header": 39,
+        "OrderedList": 2,
+        "Table": 1
+      }
+    },
+    {
+      "source": "chapters/04-execution-data.typ",
+      "destination": "chapters/05-execution-data.qmd",
+      "source_sha256": "d46d5c61d676ead918a2345155e7e6596d387f2aa7b451ee85ef1e4ee969f393",
+      "prose_sha256": "576c23a0bc445612f6ad4dce07997a06e7ebe79658a0b55a4e548ad15887866b",
+      "math_sha256": "53a42fd51f9592fa135ce0e2ea3338f1fddaf09e3982f99c47acdf3c04aabf3d",
+      "formulas": 35,
+      "structure": {
+        "Header": 24,
+        "BulletList": 7,
+        "Table": 2,
+        "OrderedList": 2
+      }
+    },
+    {
+      "source": "chapters/05-impact-empirical.typ",
+      "destination": "chapters/06-empirical-market-impact.qmd",
+      "source_sha256": "1c75cfb8f31d6477afd17bdddba15073f4f87f0703521f5215a3dc1ff3861ea8",
+      "prose_sha256": "ee05142763577ec69ac4086b2ff8a6b399159109a22c121309ada24179ba3e9c",
+      "math_sha256": "1370a5edef0916978b91c88a47fe36aa932296e3b0d0a3b779f4ba1a1e39d15c",
+      "formulas": 60,
+      "structure": {
+        "Header": 26,
+        "BulletList": 5,
+        "Table": 1,
+        "OrderedList": 3
+      }
+    },
+    {
+      "source": "chapters/06-impact-estimation.typ",
+      "destination": "chapters/07-estimating-market-impact.qmd",
+      "source_sha256": "1b81022c788f3cfcc6c2fe7d23f02e8c229c48b597961e7dff5d4a9a14e33b43",
+      "prose_sha256": "a9048ff344cb5b9d8725dcdf484caf718156285129fefe4e25dce6dcce9f2ab6",
+      "math_sha256": "66c7500d4756f1e8da4a20e0cfd03fe5f23eb2433a594a101e93a529c7c4502e",
+      "formulas": 98,
+      "structure": {
+        "Header": 19,
+        "BulletList": 6,
+        "OrderedList": 2
+      }
+    },
+    {
+      "source": "chapters/07-liquidity-forecasting.typ",
+      "destination": "chapters/08-liquidity-state.qmd",
+      "source_sha256": "5860a2d26bc528c4819a15af1a58787a39b862e1e73061eca93a1ffa776fad79",
+      "prose_sha256": "8a3264259598dd31d39d0f1dd7b6204418ac7d8889cc842c514a3e0ea6d54a3f",
+      "math_sha256": "af5756e7ed8ba8cb9f3ec59d099d983c8769834ee20fdb59fc633022a00509a2",
+      "formulas": 129,
+      "structure": {
+        "Header": 24,
+        "BulletList": 5,
+        "OrderedList": 3
+      }
+    },
+    {
+      "source": "chapters/15-policy-evaluation.typ",
+      "destination": "chapters/16-policy-evaluation.qmd",
+      "source_sha256": "b3ea404ef8701231c0a41586f6b2be6f521246f93a59134437eaaa2078a2fb03",
+      "prose_sha256": "e0736b30efbeaadee0ee9205a7e429f84298867dc6b0cf88288912e368af2fde",
+      "math_sha256": "1b58452c0d6e04191e92ba376d43b8cce842be546a4ee4509d1ec103e600bb40",
+      "formulas": 54,
+      "structure": {
+        "Header": 23,
+        "BulletList": 3,
+        "OrderedList": 3
+      }
+    },
+    {
+      "source": "chapters/23-production-research.typ",
+      "destination": "chapters/24-production-research.qmd",
+      "source_sha256": "2c4889c9abb1968dd02431323f63aebbc800efa11fd7ff1313a9558883b9a4b2",
+      "prose_sha256": "03b4147964927c187ddac543f98323be52c11298ee48107ddea559cb557d2e79",
+      "math_sha256": "c87c2d8827247585607f2506c8c343c4204d07ba300218e12e0c399eb0f05ba9",
+      "formulas": 53,
+      "structure": {
+        "Header": 37,
+        "BulletList": 17,
+        "OrderedList": 3
+      }
+    },
+    {
+      "source": "chapters/05-optimal-execution.typ",
+      "destination": "source-drafts/optimal-execution.qmd",
+      "source_sha256": "48436c3bf19ee3aee3897135b492c13f551635e536ecf6a577e77585f958f825",
+      "prose_sha256": "df077c29d2c37aa1b271d02ca0bd5af18c5cbf6faa397d6546a7fbc4754cea98",
+      "math_sha256": "ce45fd327cc4dc8b4b655a46348a733a9d7ce941524485cf7a4546db518ebff9",
+      "formulas": 67,
+      "structure": {
+        "Header": 14,
+        "BulletList": 3,
+        "OrderedList": 2
+      }
+    },
+    {
+      "source": "interview-qa/chapters/01-participation-impact.typ",
+      "destination": "interview-qa/01-participation-impact.qmd",
+      "source_sha256": "657dc90d65b4b8a910d70928057fc0d836bee4a969b7fa9e9687b71d5793d991",
+      "prose_sha256": "e96018cd0035b643e3dcd73176192615918c832db5faefc713fedef39212d4aa",
+      "math_sha256": "db8bcff6bd2d834d9414ec6cf0eb8fa521708dcad95bcc999a5f88d3c38b34ec",
+      "formulas": 32,
+      "structure": {
+        "Header": 25,
+        "Table": 1,
+        "BulletList": 2,
+        "OrderedList": 1
+      }
+    },
+    {
+      "source": "interview-qa/chapters/02-time-of-day-liquidity.typ",
+      "destination": "interview-qa/02-time-of-day-liquidity.qmd",
+      "source_sha256": "fd7b75a3007e7fbbb5ad8872d503fa34b6d37fcbb8cf486a9d8711985df4cc72",
+      "prose_sha256": "a777a97edbcab7bc78a8f24af5351f6d059c49f5560e22cc368f390a28b065b7",
+      "math_sha256": "295007468c1c12edf24468308d50d96d968e4290dd493fcb715c21e58ac3166a",
+      "formulas": 7,
+      "structure": {
+        "Header": 23,
+        "OrderedList": 1
+      }
+    },
+    {
+      "source": "interview-qa/chapters/03-transient-impact-resilience.typ",
+      "destination": "interview-qa/03-transient-impact-resilience.qmd",
+      "source_sha256": "6725003af6bafa17baf487c4a09cc9e514fe558aee07b45319943a157adf22b9",
+      "prose_sha256": "3f7765bec4e0ff1ffbf4e608c278c0cf9c0877777738e5f6db9a4612f1e9d9e4",
+      "math_sha256": "18b708f6b33d40a4782ff9bfe9bc7826ead4b9ed4bd67dd7121b5fab45a770b4",
+      "formulas": 16,
+      "structure": {
+        "Header": 23,
+        "BulletList": 1,
+        "OrderedList": 1
+      }
+    },
+    {
+      "source": "interview-qa/chapters/04-passive-aggressive-queues.typ",
+      "destination": "interview-qa/04-passive-aggressive-queues.qmd",
+      "source_sha256": "faa4515e75c7a302cd834e275ef142dfbce458aff074a339cd23bab8d59f7a53",
+      "prose_sha256": "3f13568f79b54f744561680a4204b7d00b654c765ebf042ad20acd35c28846d0",
+      "math_sha256": "a3ffb37fbe478e911c6b1deb10d357f28f07a389500d07639ef4970515c3e3fc",
+      "formulas": 11,
+      "structure": {
+        "Header": 23,
+        "OrderedList": 1
+      }
+    },
+    {
+      "source": "interview-qa/chapters/05-adaptive-policy-evaluation.typ",
+      "destination": "interview-qa/05-adaptive-policy-evaluation.qmd",
+      "source_sha256": "d310be1db80cc4dceb90411f3853e190da7a1effd05b6308c00d235eefa7b90a",
+      "prose_sha256": "b04d07b2f0facb2702cb070876cb393fc861616cf39a45ea4e835a9440028745",
+      "math_sha256": "ff575dd08cde8cc81f23485826c204f497d4ed99c2719095a402dc7c9119085f",
+      "formulas": 6,
+      "structure": {
+        "Header": 29,
+        "OrderedList": 1
+      }
+    },
+    {
+      "source": "interview-qa/chapters/06-almgren-chriss-control.typ",
+      "destination": "interview-qa/06-almgren-chriss-control.qmd",
+      "source_sha256": "fbab894a3b3f72c678d71dc74651d00c2a20cb4ce8f51f3fb978756ace9c3502",
+      "prose_sha256": "972a9bebda347011cc90d37c308233615250317d2888402ca295166b3a4c8409",
+      "math_sha256": "1e166fc93edfe2b5e70bab4da2adc0cba2411e480520db73d0610bbd1417b3fa",
+      "formulas": 119,
+      "structure": {
+        "Header": 31,
+        "OrderedList": 1
+      }
+    },
+    {
+      "source": "interview-qa/chapters/07-futures-roll-liquidity.typ",
+      "destination": "interview-qa/07-futures-roll-liquidity.qmd",
+      "source_sha256": "974d9d656793bbb101ea9e16f1e31c0a3ea76dc3c8754472f988e9787078b0c1",
+      "prose_sha256": "8ee3ce2818eb029066ebe13d60486da11552709d7a06a507fb19d0c4e0bfa23b",
+      "math_sha256": "5ff538bc00d2f08e38b960da437e59310826f71646a07024ac09e526effb3f28",
+      "formulas": 62,
+      "structure": {
+        "Header": 31,
+        "Table": 1,
+        "OrderedList": 1
+      }
+    }
+  ],
+  "parts": [
+    {
+      "title": "Part I - Understanding the execution problem",
+      "purpose": "The reader first learns what an execution algorithm is trying to accomplish, how a market absorbs orders, and what it means to say that an execution was expensive.",
+      "chapters": [
+        {
+          "number": 1,
+          "title": "The Execution Problem",
+          "purpose": "Frames execution as a decision problem in which inventory must be traded while prices, liquidity, and information continue to change.",
+          "subtopics": "Parent and child orders; inventory dynamics and trading rate; market state, information, and admissible policies; implementation shortfall and terminal completion; immediacy, impact, price risk, and alpha decay; benchmarks and constraints; open-loop schedules and feedback policies; partial observation; Bellman recursion and the HJB equation; prediction, causal response, and control; model risk, units, and normalization.",
+          "status": "First draft",
+          "target": "ch-control-lens",
+          "file": "chapters/01-execution-problem.qmd"
+        },
+        {
+          "number": 2,
+          "title": "How Markets Absorb Orders",
+          "purpose": "Builds an economic picture of the trading venue before reducing liquidity to a handful of model inputs.",
+          "subtopics": "The bid, ask, spread, and depth; marketable and resting limit orders; price-time priority and queue position; book-walking cost; spread capture and adverse selection; fill and non-fill value; trade and order-flow imbalance; microprice; mechanical, informational, and common-cause price response; hidden liquidity and cancellations; replenishment and resilience; liquidity across horizons; calendar, event, and volume time; intraday seasonality; fragmentation and routing; dark liquidity; auctions; translating mechanism into control state.",
+          "status": "First draft",
+          "target": "ch-microstructure",
+          "file": "chapters/02-how-markets-absorb-orders.qmd"
+        },
+        {
+          "number": 3,
+          "title": "What Does an Execution Cost?",
+          "purpose": "Defines the outcomes that execution research tries to explain and shows why the benchmark determines the economic question.",
+          "subtopics": "Arrival-price implementation shortfall; VWAP, TWAP, close, and interval benchmarks; spread cost; timing risk; impact; opportunity cost; markouts; partial fills and unfinished orders; realized versus expected cost; cost decomposition; counterfactual interpretation; transaction-cost analysis.",
+          "status": "First draft",
+          "target": "ch-tca",
+          "file": "chapters/03-execution-cost.qmd"
+        }
+      ]
+    },
+    {
+      "title": "Part II - Learning from execution data",
+      "purpose": "This part develops the research judgment needed to turn market observations into defensible measurements, models, and forecasts.",
+      "chapters": [
+        {
+          "number": 4,
+          "title": "Statistical Modeling as a Research Process",
+          "purpose": "Explains how to move from an observed market phenomenon to a model that can support an explanation, forecast, or decision.",
+          "subtopics": "Research-question formation; the phenomenon, population, observational unit, target, and estimand; data-generating stories; prediction, explanation, causal estimation, and control; information available at decision time; data contracts; noisy labels; feature mechanisms and invariances; validation design; model ladders; bias, variance, and irreducible noise; learning curves; residual analysis; uncertainty; extrapolation; distribution shift; decision-aware evaluation; research logs and synthetic experiments.",
+          "status": "First draft",
+          "target": "ch-modeling-research",
+          "file": "chapters/04-statistical-modeling.qmd"
+        },
+        {
+          "number": 5,
+          "title": "Execution Data: From Market Events to Research Tables",
+          "purpose": "Shows how orders, fills, quotes, and trades become a trustworthy research dataset without losing their timing or economic meaning.",
+          "subtopics": "Order, fill, quote, trade, and depth records; entity keys and order lifecycles; sequence numbers and book replay; parent-order reconstruction; event alignment and latency-aware quote matching; timestamps and clock synchronization; calendar, event, and volume-time sampling; stale observations; missingness; cancellations and censored fills; corporate actions and effective-dated reference data; futures rolls and exact contract identity; live versus corrected data; leakage-safe joins; data lineage, reconciliation, and reproducible research tables.",
+          "status": "First draft",
+          "target": "ch-execution-data",
+          "file": "chapters/05-execution-data.qmd"
+        },
+        {
+          "number": 6,
+          "title": "The Empirical Shape of Market Impact",
+          "purpose": "Describes the regularities seen in execution data before imposing a particular functional form or causal interpretation.",
+          "subtopics": "Signed response and the missing no-trade path; child-order and parent-order scales; clock and quantity-progress trajectories; order size, intended and realized participation, and duration; concavity and square-root behavior; average, total, and marginal cost; temporary, transient, and permanent horizons; pauses, resilience, and post-trade decay; mechanical and informational response; volatility, spread, depth, and volume normalization; time-of-day effects; regimes and cross-sectional collapse; equities, futures, options, and less-liquid products; futures rolls; exploratory surface diagnostics; translation from empirical regularity to control input.",
+          "status": "First draft",
+          "target": "ch-impact-empirical",
+          "file": "chapters/06-empirical-market-impact.qmd"
+        },
+        {
+          "number": 7,
+          "title": "Estimating Market Impact",
+          "purpose": "Develops statistical methods for estimating impact while being explicit about selection, endogeneity, uncertainty, and model use.",
+          "subtopics": "Parametric and nonparametric specifications; log-log models; nonlinear and constrained regression; heteroskedasticity and heavy tails; hierarchical shrinkage; interactions and segmentation; metaorder reconstruction; endogenous participation and duration; latent urgency; confounding and selection; measurement error; causal designs; uncertainty intervals; stability; residual diagnostics; policy sensitivity.",
+          "status": "First draft",
+          "target": "ch-impact-estimation",
+          "file": "chapters/07-estimating-market-impact.qmd"
+        },
+        {
+          "number": 8,
+          "title": "Short-Horizon Forecasting and Liquidity State",
+          "purpose": "Forecasts the market quantities that distinguish execution actions, including both liquidity conditions and short-lived price pressure.",
+          "subtopics": "Decision horizons and action-conditional forecasts; intraday and remaining-day volume distributions; intended and realized participation; spread and depth transitions; book-walking cost; realized and forecast volatility; inventory-weighted forecast loss; imbalance, microprice, and order-flow imbalance; multi-horizon price and markout prediction; alpha decay and value net of execution cost; fill probability and fill-conditioned adverse selection; event intensities and point processes; state-space and latent-liquidity models; regime switching; trees, boosting, neural networks, and Gaussian processes; joint probabilistic forecasts; calibration; scenario generation; temporal leakage; forecast value for control; drift and fallback.",
+          "status": "First draft",
+          "target": "ch-liquidity-state",
+          "file": "chapters/08-liquidity-state.qmd"
+        }
+      ]
+    },
+    {
+      "title": "Part III - From estimated models to execution policies",
+      "purpose": "The emphasis now moves from describing costs and market state to choosing actions and understanding why an optimal policy behaves as it does.",
+      "chapters": [
+        {
+          "number": 9,
+          "title": "Classical Optimal Liquidation",
+          "purpose": "Derives the basic cost-risk trade-off and uses it to explain the shape of an optimal liquidation schedule.",
+          "subtopics": "Discrete and continuous inventory dynamics; temporary impact; price risk; Bertsimas-Lo; Almgren-Chriss; expected cost and variance; the execution frontier; risk aversion and urgency; boundary conditions; closed-form trajectories; calibration; units and limiting cases; when the classical assumptions fail.",
+          "status": "Source draft",
+          "target": null,
+          "file": "chapters/09-classical-optimal-liquidation.qmd"
+        },
+        {
+          "number": 10,
+          "title": "Volume Time, VWAP, and Participation Strategies",
+          "purpose": "Connects optimal liquidation to the schedules and constraints used by practical execution algorithms.",
+          "subtopics": "Calendar time and volume time; TWAP and VWAP schedules; constant and time-varying POV; uncertain future volume; participation caps and floors; completion constraints; catch-up logic near deadlines; benchmark-aware control; realized versus intended participation; interaction among impact, volume forecasts, and alpha decay.",
+          "status": "Source draft",
+          "target": null,
+          "file": "chapters/10-volume-time-vwap-and-participation-strategies.qmd"
+        },
+        {
+          "number": 11,
+          "title": "Transient Impact and Market Resilience",
+          "purpose": "Introduces impact with memory and studies how liquidity recovery changes the value of waiting and the shape of a schedule.",
+          "subtopics": "Propagator states; exponential and power-law kernels; resilience; path-dependent execution cost; child-order spacing; post-trade decay; kernel estimation; mechanical decay versus informational reversion; price manipulation; no-dynamic-arbitrage restrictions; optimal schedules under transient impact.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/11-transient-impact-and-market-resilience.qmd"
+        },
+        {
+          "number": 12,
+          "title": "Adaptive Execution",
+          "purpose": "Explains how a policy should respond when forecasts, market conditions, or beliefs change during an order.",
+          "subtopics": "Feedback policies; state and belief updates; receding-horizon control; model-predictive control; Bayesian learning; uncertain parameters; robust and distributionally robust optimization; dual control; changing volume, volatility, spread, and alpha; stability; excessive switching; hysteresis; guardrails; emergency completion; value of adaptation.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/12-adaptive-execution.qmd"
+        },
+        {
+          "number": 13,
+          "title": "Passive Execution and Queue Control",
+          "purpose": "Values a resting order as a contingent execution whose apparent spread saving must be balanced against non-fill and adverse-selection risk.",
+          "subtopics": "Posting versus crossing; queue priority and position; fill probability; queue depletion; cancellation and reposting; conditional markouts; adverse selection after fills; survival and hazard models; marked point processes; non-fill and deadline risk; impulse control; aggressiveness selection.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/13-passive-execution-and-queue-control.qmd"
+        },
+        {
+          "number": 14,
+          "title": "Routing, Dark Liquidity, and Auctions",
+          "purpose": "Extends the action from trading speed to venue, order type, and trading mechanism.",
+          "subtopics": "Fragmented liquidity; fees and rebates; latency; fill quality; venue-specific toxicity; dark pools and conditional liquidity; information leakage; price protection; contextual bandits; constrained routing; opening and closing auctions; imbalance information; crossing opportunities; joint control of schedule, aggressiveness, and venue.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/14-routing-dark-liquidity-and-auctions.qmd"
+        },
+        {
+          "number": 15,
+          "title": "Futures Execution",
+          "purpose": "Treats contract choice, roll dynamics, and economic exposure as part of the execution decision rather than as data-cleaning details.",
+          "subtopics": "Contract multipliers, tick sizes, and risk-equivalent quantity; margin versus exposure; contract liquidity measures; front and deferred contracts; liquidity migration; roll timing; basis and calendar spreads; outright versus spread execution; continuous-series distortions; session boundaries; expiry effects; roll-aware impact models; two-expiry control; underestimation near rolls.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/15-futures-execution.qmd"
+        }
+      ]
+    },
+    {
+      "title": "Part IV - Determining whether a policy works",
+      "purpose": "A policy must be evaluated as a policy. These chapters separate genuine improvement from changes in order mix, market conditions, or the algorithm's own selection behavior.",
+      "chapters": [
+        {
+          "number": 16,
+          "title": "Experiments and Policy Evaluation",
+          "purpose": "Develops credible ways to decide whether a new execution policy improves outcomes and for which orders it improves them.",
+          "subtopics": "Randomized execution experiments; A/B tests and switchbacks; stratification; interference; selection into algorithms; completion bias and censoring; common support; counterfactual policy values; inverse-propensity weighting; doubly robust estimation; heterogeneous effects; uncertainty for policy differences; economic versus statistical significance; staged rollout and monitoring.",
+          "status": "First draft",
+          "target": "ch-policy-evaluation",
+          "file": "chapters/16-policy-evaluation.qmd"
+        },
+        {
+          "number": 17,
+          "title": "Reinforcement Learning for Execution",
+          "purpose": "Examines when execution should be treated as a learned sequential policy and why offline data make that problem difficult.",
+          "subtopics": "MDPs and partially observed MDPs; state, action, transition, and reward design; inventory and deadline constraints; simulator construction; simulator bias; behavior policies; offline reinforcement learning; off-policy evaluation; distribution shift; conservative policy improvement; safe exploration; policy guardrails; comparison with model-predictive control.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/17-reinforcement-learning-for-execution.qmd"
+        }
+      ]
+    },
+    {
+      "title": "Part V - Other trading problems through the control lens",
+      "purpose": "The same language of state, belief, action, cost, and feedback is applied to other central problems in algorithmic trading.",
+      "chapters": [
+        {
+          "number": 18,
+          "title": "Market Making and Inventory Control",
+          "purpose": "Studies bid and ask decisions when the trader earns spread but accumulates inventory and adverse-selection risk.",
+          "subtopics": "Reservation prices; Avellaneda-Stoikov; inventory penalties; quote skew; order-arrival calibration; fill probabilities; adverse selection; queue-aware quoting; volatility and regime changes; latency; multi-asset inventory; practical limits of stylized models.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/18-market-making-and-inventory-control.qmd"
+        },
+        {
+          "number": 19,
+          "title": "Multi-Asset and Portfolio Execution",
+          "purpose": "Coordinates the liquidation of related positions when risk, liquidity, and impact are coupled across instruments.",
+          "subtopics": "Basket execution; covariance and factor risk; factor liquidity; cross-impact; coupled schedules; hedging during execution; index rebalances; portfolio transitions; manipulation-free cross-impact; parameter estimation; robustness to unstable correlations and liquidity.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/19-multi-asset-and-portfolio-execution.qmd"
+        },
+        {
+          "number": 20,
+          "title": "Portfolio Choice with Trading Frictions",
+          "purpose": "Connects forecasts and desired positions to the costly, gradual process of moving an actual portfolio.",
+          "subtopics": "Signals and expected returns; turnover; transaction costs; signal decay; dynamic mean-variance control; no-trade regions; impulse and singular control; model-predictive rebalancing; robust portfolios; execution-aware portfolio construction; the boundary between portfolio and execution decisions.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/20-portfolio-choice-with-trading-frictions.qmd"
+        },
+        {
+          "number": 21,
+          "title": "Optimal Stopping and Statistical Arbitrage",
+          "purpose": "Develops entry, exit, and abandonment decisions when waiting changes both information and opportunity.",
+          "subtopics": "Stopping times; continuation value; Snell envelopes and dynamic programming; free-boundary intuition; mean-reverting spreads; pairs and relative-value models; regime uncertainty; sequential testing; transaction costs; delayed execution; signal decay; when a statistically attractive trade is not economically worth taking.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/21-optimal-stopping-and-statistical-arbitrage.qmd"
+        },
+        {
+          "number": 22,
+          "title": "Options Hedging under Frictions",
+          "purpose": "Studies hedging when rebalancing is discrete, costly, and itself moves the market.",
+          "subtopics": "Delta and gamma exposure; discrete hedging error; stochastic volatility; transaction costs; impact-aware rebalancing; inventory constraints; no-trade regions; volatility and jump risk; joint hedge and execution decisions; liquidity differences across strikes and maturities.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/22-options-hedging-under-frictions.qmd"
+        },
+        {
+          "number": 23,
+          "title": "Strategic Traders and Stochastic Games",
+          "purpose": "Explains when market response depends on the beliefs and actions of other strategic participants, not only on exogenous noise.",
+          "subtopics": "Signaling through order flow; strategic liquidation; predatory trading; information leakage; equilibrium impact; best responses; stochastic differential games; mean-field games; competition among execution algorithms; mechanism design; limits of single-agent control models.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/23-strategic-traders-and-stochastic-games.qmd"
+        }
+      ]
+    },
+    {
+      "title": "Part VI - Conducting execution research",
+      "purpose": "The final part brings the statistical, economic, and control ideas together in complete research workflows.",
+      "chapters": [
+        {
+          "number": 24,
+          "title": "From Research Question to Production Model",
+          "purpose": "Follows a model from its first research question through deployment, monitoring, and communication with traders and engineers.",
+          "subtopics": "Problem statements and decision context; simple benchmarks; exploratory analysis; preregistered validation; reproducible experiments; feature and model versioning; leakage controls; stress and sensitivity tests; translating estimates into policy behavior; model-engine interfaces; monitoring and drift; retraining; governance; rollback; communicating uncertainty.",
+          "status": "First draft",
+          "target": "ch-production-research",
+          "file": "chapters/24-production-research.qmd"
+        },
+        {
+          "number": 25,
+          "title": "Worked Research Studies",
+          "purpose": "Presents complete investigations so the reader can see how the book's principles interact when the data and conclusions are imperfect.",
+          "subtopics": "Estimating an equity impact curve; diagnosing time-of-day effects; estimating transient-impact decay; designing and evaluating adaptive POV; modeling passive fills and adverse selection; futures execution around a roll; reproducing Almgren-Chriss and a propagator model; comparing a learned policy with a controlled baseline.",
+          "status": "Planned",
+          "target": null,
+          "file": "chapters/25-worked-research-studies.qmd"
+        }
+      ]
+    }
+  ]
+}

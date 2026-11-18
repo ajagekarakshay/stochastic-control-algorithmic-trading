@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 14
+draft-status: "Planned"
+---
+
+# Routing, Dark Liquidity, and Auctions {#plan-ch14}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Extends the action from trading speed to venue, order type, and trading mechanism.
+
+**Subtopics.** Fragmented liquidity; fees and rebates; latency; fill quality; venue-specific toxicity; dark pools and conditional liquidity; information leakage; price protection; contextual bandits; constrained routing; opening and closing auctions; imbalance information; crossing opportunities; joint control of schedule, aggressiveness, and venue.

@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 22
+draft-status: "Planned"
+---
+
+# Options Hedging under Frictions {#plan-ch22}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Studies hedging when rebalancing is discrete, costly, and itself moves the market.
+
+**Subtopics.** Delta and gamma exposure; discrete hedging error; stochastic volatility; transaction costs; impact-aware rebalancing; inventory constraints; no-trade regions; volatility and jump risk; joint hedge and execution decisions; liquidity differences across strikes and maturities.

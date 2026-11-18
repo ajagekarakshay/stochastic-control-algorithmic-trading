@@ -1,0 +1,21 @@
+---
+number-sections: false
+---
+
+# Execution and Market Impact Interview Q&A {#qa-chapter-index .unnumbered}
+
+Questions first, then rigorous answers and discussion
+
+1.  [Participation, Impact, and Causal Interpretation](01-participation-impact.qmd#qa-ch01)
+
+2.  [Time of Day, Liquidity, and Confounding](02-time-of-day-liquidity.qmd#qa-ch02)
+
+3.  [Transient Impact, Resilience, and Schedule Shape](03-transient-impact-resilience.qmd#qa-ch03)
+
+4.  [Passive versus Aggressive Execution](04-passive-aggressive-queues.qmd#qa-ch04)
+
+5.  [Adaptive versus Static POV](05-adaptive-policy-evaluation.qmd#qa-ch05)
+
+6.  [Almgren-Chriss: Risk, Impact, and the Execution Frontier](06-almgren-chriss-control.qmd#qa-ch06)
+
+7.  [Futures Execution: Contract Choice, Rolls, and Liquidity Migration](07-futures-roll-liquidity.qmd#qa-ch07)

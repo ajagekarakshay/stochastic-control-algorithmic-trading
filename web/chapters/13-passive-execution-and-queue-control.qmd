@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 13
+draft-status: "Planned"
+---
+
+# Passive Execution and Queue Control {#plan-ch13}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Values a resting order as a contingent execution whose apparent spread saving must be balanced against non-fill and adverse-selection risk.
+
+**Subtopics.** Posting versus crossing; queue priority and position; fill probability; queue depletion; cancellation and reposting; conditional markouts; adverse selection after fills; survival and hazard models; marked point processes; non-fill and deadline risk; impulse control; aggressiveness selection.

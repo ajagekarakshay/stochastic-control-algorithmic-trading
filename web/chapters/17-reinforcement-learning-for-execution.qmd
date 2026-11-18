@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 17
+draft-status: "Planned"
+---
+
+# Reinforcement Learning for Execution {#plan-ch17}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Examines when execution should be treated as a learned sequential policy and why offline data make that problem difficult.
+
+**Subtopics.** MDPs and partially observed MDPs; state, action, transition, and reward design; inventory and deadline constraints; simulator construction; simulator bias; behavior policies; offline reinforcement learning; off-policy evaluation; distribution shift; conservative policy improvement; safe exploration; policy guardrails; comparison with model-predictive control.

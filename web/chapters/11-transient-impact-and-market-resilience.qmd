@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 11
+draft-status: "Planned"
+---
+
+# Transient Impact and Market Resilience {#plan-ch11}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Introduces impact with memory and studies how liquidity recovery changes the value of waiting and the shape of a schedule.
+
+**Subtopics.** Propagator states; exponential and power-law kernels; resilience; path-dependent execution cost; child-order spacing; post-trade decay; kernel estimation; mechanical decay versus informational reversion; price manipulation; no-dynamic-arbitrage restrictions; optimal schedules under transient impact.

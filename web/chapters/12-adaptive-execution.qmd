@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 12
+draft-status: "Planned"
+---
+
+# Adaptive Execution {#plan-ch12}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Explains how a policy should respond when forecasts, market conditions, or beliefs change during an order.
+
+**Subtopics.** Feedback policies; state and belief updates; receding-horizon control; model-predictive control; Bayesian learning; uncertain parameters; robust and distributionally robust optimization; dual control; changing volume, volatility, spread, and alpha; stability; excessive switching; hysteresis; guardrails; emergency completion; value of adaptation.

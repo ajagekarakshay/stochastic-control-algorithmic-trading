@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 25
+draft-status: "Planned"
+---
+
+# Worked Research Studies {#plan-ch25}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Presents complete investigations so the reader can see how the book's principles interact when the data and conclusions are imperfect.
+
+**Subtopics.** Estimating an equity impact curve; diagnosing time-of-day effects; estimating transient-impact decay; designing and evaluating adaptive POV; modeling passive fills and adverse selection; futures execution around a roll; reproducing Almgren-Chriss and a propagator model; comparing a learned policy with a controlled baseline.

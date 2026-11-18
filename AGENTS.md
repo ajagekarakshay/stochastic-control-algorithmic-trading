@@ -64,6 +64,23 @@ dependence. Distinguish prediction, causal estimation, and control.
 
 ## Repository workflow
 
+- The online edition is a Quarto book under `web/`, styled with
+  `web/editorial.scss`. Preserve native Quarto navigation, search, citations,
+  and math support when changing its presentation.
+- This migration preserves the Typst manuscript as its reference. Do not
+  rewrite, summarize, correct, or add manuscript content during format changes.
+  `make check-port` audits wording, formulas, citations, lists, and tables;
+  `make web check-web` builds and checks all pages and internal links.
+- Develop new online content in `web/chapters/` one chapter at a time, after
+  agreeing on its purpose and subtopics. Keep planned pages aligned with the
+  approved Typst skeleton and `ROADMAP.md`. Retire an archived-source migration
+  comparison explicitly when an intentional content edit supersedes it.
+- GitHub Actions deploys the online edition to Pages on `main`. Keep the custom
+  domain unset until the user supplies it. Generated HTML in `web/_book/` is
+  ignored; commit `.qmd`, theme, validation, and workflow sources.
+
+For the retained Typst/PDF edition:
+
 - Keep each chapter in `chapters/` and include it from `main.typ`.
 - Keep the detailed chapter index in `chapters/00-book-skeleton.typ` aligned
   with `ROADMAP.md`. Link entries only to material that exists.

@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 21
+draft-status: "Planned"
+---
+
+# Optimal Stopping and Statistical Arbitrage {#plan-ch21}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Develops entry, exit, and abandonment decisions when waiting changes both information and opportunity.
+
+**Subtopics.** Stopping times; continuation value; Snell envelopes and dynamic programming; free-boundary intuition; mean-reverting spreads; pairs and relative-value models; regime uncertainty; sequential testing; transaction costs; delayed execution; signal decay; when a statistically attractive trade is not economically worth taking.

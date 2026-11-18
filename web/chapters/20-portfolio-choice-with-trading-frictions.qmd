@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 20
+draft-status: "Planned"
+---
+
+# Portfolio Choice with Trading Frictions {#plan-ch20}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Connects forecasts and desired positions to the costly, gradual process of moving an actual portfolio.
+
+**Subtopics.** Signals and expected returns; turnover; transaction costs; signal decay; dynamic mean-variance control; no-trade regions; impulse and singular control; model-predictive rebalancing; robust portfolios; execution-aware portfolio construction; the boundary between portfolio and execution decisions.

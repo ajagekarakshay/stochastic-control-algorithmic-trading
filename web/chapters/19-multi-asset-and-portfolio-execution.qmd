@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 19
+draft-status: "Planned"
+---
+
+# Multi-Asset and Portfolio Execution {#plan-ch19}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Coordinates the liquidation of related positions when risk, liquidity, and impact are coupled across instruments.
+
+**Subtopics.** Basket execution; covariance and factor risk; factor liquidity; cross-impact; coupled schedules; hedging during execution; index rebalances; portfolio transitions; manipulation-free cross-impact; parameter estimation; robustness to unstable correlations and liquidity.

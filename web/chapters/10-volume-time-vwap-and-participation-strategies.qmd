@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 10
+draft-status: "Source draft"
+---
+
+# Volume Time, VWAP, and Participation Strategies {#plan-ch10}
+
+::: {.planned-chapter}
+Source draft
+:::
+
+Connects optimal liquidation to the schedules and constraints used by practical execution algorithms.
+
+**Subtopics.** Calendar time and volume time; TWAP and VWAP schedules; constant and time-varying POV; uncertain future volume; participation caps and floors; completion constraints; catch-up logic near deadlines; benchmark-aware control; realized versus intended participation; interaction among impact, volume forecasts, and alpha decay.

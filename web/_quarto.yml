@@ -1,0 +1,134 @@
+project:
+  type: book
+  output-dir: _book
+  resources:
+    - assets/**
+  pre-render:
+    - python3 ../scripts/prepare_web.py
+
+book:
+  title: "Stochastic Modeling and Optimal Control for Algorithmic Trading"
+  subtitle: "From market microstructure and statistical inference to adaptive trading policies"
+  author: "Akshay Ajagekar"
+  site-url: https://ajagekarakshay.github.io/stochastic-control-algorithmic-trading/
+  repo-url: https://github.com/ajagekarakshay/stochastic-control-algorithmic-trading
+  repo-subdir: web
+  repo-branch: main
+  repo-actions: [source, issue]
+  search:
+    location: sidebar
+    type: textbox
+  navbar:
+    title: "Stochastic Control · Algorithmic Trading"
+    right:
+      - text: Roadmap
+        href: roadmap.qmd
+      - text: Interview Q&A
+        href: interview-qa/index.qmd
+      - icon: file-pdf
+        text: PDF
+        href: assets/pdf/stochastic-control-algorithmic-trading.pdf
+  sidebar:
+    title: "The book"
+    style: docked
+    background: "#fffefa"
+    border: true
+    collapse-level: 1
+  page-navigation: true
+  page-footer:
+    left: "Akshay Ajagekar · Working manuscript"
+    center:
+      - text: Chapter index
+        href: chapter-index.qmd
+      - text: Roadmap
+        href: roadmap.qmd
+    right:
+      - text: GitHub
+        href: https://github.com/ajagekarakshay/stochastic-control-algorithmic-trading
+  chapters:
+    - index.qmd
+    - chapter-index.qmd
+    - roadmap.qmd
+    - part: "Part I - Understanding the execution problem"
+      chapters:
+        - chapters/01-execution-problem.qmd
+        - chapters/02-how-markets-absorb-orders.qmd
+        - chapters/03-execution-cost.qmd
+    - part: "Part II - Learning from execution data"
+      chapters:
+        - chapters/04-statistical-modeling.qmd
+        - chapters/05-execution-data.qmd
+        - chapters/06-empirical-market-impact.qmd
+        - chapters/07-estimating-market-impact.qmd
+        - chapters/08-liquidity-state.qmd
+    - part: "Part III - From estimated models to execution policies"
+      chapters:
+        - chapters/09-classical-optimal-liquidation.qmd
+        - chapters/10-volume-time-vwap-and-participation-strategies.qmd
+        - chapters/11-transient-impact-and-market-resilience.qmd
+        - chapters/12-adaptive-execution.qmd
+        - chapters/13-passive-execution-and-queue-control.qmd
+        - chapters/14-routing-dark-liquidity-and-auctions.qmd
+        - chapters/15-futures-execution.qmd
+    - part: "Part IV - Determining whether a policy works"
+      chapters:
+        - chapters/16-policy-evaluation.qmd
+        - chapters/17-reinforcement-learning-for-execution.qmd
+    - part: "Part V - Other trading problems through the control lens"
+      chapters:
+        - chapters/18-market-making-and-inventory-control.qmd
+        - chapters/19-multi-asset-and-portfolio-execution.qmd
+        - chapters/20-portfolio-choice-with-trading-frictions.qmd
+        - chapters/21-optimal-stopping-and-statistical-arbitrage.qmd
+        - chapters/22-options-hedging-under-frictions.qmd
+        - chapters/23-strategic-traders-and-stochastic-games.qmd
+    - part: "Part VI - Conducting execution research"
+      chapters:
+        - chapters/24-production-research.qmd
+        - chapters/25-worked-research-studies.qmd
+    - appendices.qmd
+    - references.qmd
+    - part: "Interview Q&A companion"
+      chapters:
+        - interview-qa/index.qmd
+        - interview-qa/01-participation-impact.qmd
+        - interview-qa/02-time-of-day-liquidity.qmd
+        - interview-qa/03-transient-impact-resilience.qmd
+        - interview-qa/04-passive-aggressive-queues.qmd
+        - interview-qa/05-adaptive-policy-evaluation.qmd
+        - interview-qa/06-almgren-chriss-control.qmd
+        - interview-qa/07-futures-roll-liquidity.qmd
+    - part: "Retained source drafts"
+      chapters:
+        - source-drafts/index.qmd
+        - source-drafts/optimal-execution.qmd
+
+bibliography: ../references.bib
+csl: assets/ieee.csl
+link-citations: true
+toc: true
+toc-depth: 2
+number-sections: true
+lang: en
+filters:
+  - filters/chapter-heading.lua
+
+format:
+  html:
+    theme: [cosmo, editorial.scss]
+    html-math-method: mathjax
+    toc-title: "On this page"
+    anchor-sections: true
+    smooth-scroll: false
+    code-copy: true
+    code-fold: false
+    code-overflow: wrap
+    grid:
+      sidebar-width: 255px
+      body-width: 800px
+      margin-width: 215px
+      gutter-width: 2rem
+    include-after-body: assets/book.js
+
+execute:
+  freeze: auto

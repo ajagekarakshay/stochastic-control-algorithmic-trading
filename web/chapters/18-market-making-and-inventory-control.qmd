@@ -1,0 +1,15 @@
+---
+source-typst: "chapters/00-book-skeleton.typ"
+chapter-number: 18
+draft-status: "Planned"
+---
+
+# Market Making and Inventory Control {#plan-ch18}
+
+::: {.planned-chapter}
+Planned
+:::
+
+Studies bid and ask decisions when the trader earns spread but accumulates inventory and adverse-selection risk.
+
+**Subtopics.** Reservation prices; Avellaneda-Stoikov; inventory penalties; quote skew; order-arrival calibration; fill probabilities; adverse selection; queue-aware quoting; volatility and regime changes; latency; multi-asset inventory; practical limits of stylized models.

@@ -22,6 +22,63 @@ every content page includes an Index link for returning to it.
 
 ## Build
 
+The online edition uses [Quarto](https://quarto.org/) with the editorial textbook
+theme. Its complete source is under [`web/`](web/): the existing chapters,
+all 25 chapter plans, the detailed chapter index, the roadmap, the appendices,
+the interview Q&A companion, and the retained source draft.
+
+Install Quarto **1.11.9**, then run:
+
+```bash
+make web
+make check-web
+make web-preview
+```
+
+The rendered website is written to `web/_book/`. Quarto provides search,
+responsive navigation, mathematical typesetting, citations, and previous/next
+links. The site includes the existing main-book PDF and standalone Q&A PDFs as
+downloads. No cumulative Q&A PDF is generated.
+
+The original Typst sources remain intact as the reference for this migration
+and for the existing PDF edition. The online sources are native Quarto Markdown
+(`.qmd`); normal website builds do not require Typst or a conversion step.
+Shared references remain in `references.bib`.
+
+To audit that the migration preserves every manuscript word, formula, citation,
+list, and table, run:
+
+```bash
+make check-port
+```
+
+This compares the `.qmd` content with the preserved Typst sources using Quarto's
+bundled Pandoc reader. The audit permits presentation and link changes, and
+normalizes whitespace, while comparing every translated formula. Migration
+provenance and counts are recorded in `web/migration-manifest.json`.
+`python3 scripts/port_typst.py` reproduces the migration and **overwrites the
+ported `.qmd` files**; do not run it after making intentional edits to the online
+edition. When new writing intentionally diverges from the archived Typst
+edition, retire that document's migration comparison as part of the reviewed
+content change instead of regenerating the online book.
+
+## GitHub Pages
+
+[Read the online book](https://ajagekarakshay.github.io/stochastic-control-algorithmic-trading/).
+
+The workflow in [`.github/workflows/book.yml`](.github/workflows/book.yml)
+checks content preservation, renders the book, checks every internal link and
+Q&A backlink, and deploys to GitHub Pages after a push to `main`. Pull requests
+run the same checks without publishing. In repository **Settings → Pages**,
+the build source is **GitHub Actions**.
+
+No custom domain is configured. When one is chosen, update `book.site-url` in
+`web/_quarto.yml`, add `web/CNAME` with that domain, and configure the domain in
+GitHub Pages and at the DNS provider. Relative chapter and asset links work
+under the current repository URL and a future custom domain.
+
+## PDF edition
+
 Install [Typst](https://typst.app/open-source/), then run:
 
 ```bash
@@ -74,6 +131,8 @@ cross-document navigation while preserving question-answer links.
 
 ## Current status
 
-The repository contains the approved 25-chapter architecture and six working
-main-book drafts. Chapters are reviewed and rewritten one at a time, beginning
-with Part I, rather than generated in bulk.
+The repository contains the approved 25-chapter architecture and ten working
+main-book drafts (Chapters 1–8, 16, and 24), seven Q&A chapters, and one retained
+source draft. The online port preserves their content. Unwritten chapters show
+only the purpose and subtopics from the approved skeleton. Chapters are reviewed
+and rewritten one at a time rather than generated in bulk.

@@ -6,3 +6,10 @@ tmp/
 !output/pdf/stochastic-control-algorithmic-trading.pdf
 !output/pdf/execution-interview-qa-chapter-*.pdf
 .DS_Store
+/.quarto/
+/web/.quarto/
+/web/_freeze/
+/web/_book/
+/web/assets/pdf/
+/output/site/
+__pycache__/
