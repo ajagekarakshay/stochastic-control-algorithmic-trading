@@ -11,7 +11,6 @@ function Pandoc(doc)
   if status then
     blocks[#blocks + 1] = pandoc.Div({pandoc.Para({
       pandoc.Span({pandoc.Str(pandoc.utils.stringify(status))}, pandoc.Attr("", {"book-status"})),
-      pandoc.Space(), pandoc.Str("Akshay Ajagekar")
     })}, pandoc.Attr("", {"book-chapter-meta"}))
   end
   for index = #blocks, 1, -1 do doc.blocks:insert(1, blocks[index]) end

@@ -19,7 +19,7 @@ book:
     location: sidebar
     type: textbox
   navbar:
-    title: "Stochastic Control · Algorithmic Trading"
+    title: "Stochastic Control"
     right:
       - text: Roadmap
         href: roadmap.qmd
@@ -31,7 +31,7 @@ book:
   sidebar:
     title: "The book"
     style: docked
-    background: "#fffefa"
+    background: "#f7f9fc"
     border: true
     collapse-level: 1
   page-navigation: true
@@ -116,6 +116,7 @@ filters:
 format:
   html:
     theme: [cosmo, editorial.scss]
+    css: assets/fonts/fonts.css
     html-math-method: mathjax
     toc-title: "On this page"
     anchor-sections: true
@@ -124,10 +125,10 @@ format:
     code-fold: false
     code-overflow: wrap
     grid:
-      sidebar-width: 255px
-      body-width: 800px
-      margin-width: 215px
-      gutter-width: 2rem
+      sidebar-width: 260px
+      body-width: 740px
+      margin-width: 260px
+      gutter-width: 1.75rem
     include-after-body: assets/book.js
 
 execute:

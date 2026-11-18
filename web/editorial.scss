@@ -1,111 +1,172 @@
 /*-- scss:defaults --*/
-$body-bg: #fffefa;
-$body-color: #202d2a;
-$primary: #176954;
-$link-color: #176954;
-$link-hover-color: #104d3d;
-$secondary: #65716a;
-$border-color: #e1e6de;
-$font-family-serif: Georgia, "Times New Roman", serif;
-$font-family-sans-serif: Arial, Helvetica, sans-serif;
+$web-font-path: false;
+$body-bg: #ffffff;
+$body-color: #293444;
+$primary: #28639c;
+$link-color: #28639c;
+$link-hover-color: #18446e;
+$secondary: #65738a;
+$border-color: #e3e9f0;
+$font-size-root: 16px;
+$font-size-base: 1rem;
+$line-height-base: 1.65;
+$font-family-serif: "Source Serif 4", Georgia, serif;
+$font-family-sans-serif: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 $font-family-monospace: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-$font-family-base: $font-family-serif;
-$font-size-base: 1.075rem;
-$line-height-base: 1.8;
+$font-family-base: $font-family-sans-serif;
 $headings-font-family: $font-family-sans-serif;
-$headings-font-weight: 500;
-$headings-color: #202d2a;
-$navbar-bg: #fffefa;
-$navbar-fg: #202d2a;
-$sidebar-bg: #fffefa;
-$sidebar-fg: #65716a;
-$sidebar-hl: #176954;
-$code-bg: #f3f5f0;
-$code-color: #264d3e;
-$table-border-color: #e1e6de;
-$table-cell-padding-y: .85rem;
+$headings-font-weight: 600;
+$headings-color: #192b42;
+$navbar-bg: #ffffff;
+$navbar-fg: #23364e;
+$sidebar-bg: #f7f9fc;
+$sidebar-fg: #596a80;
+$sidebar-hl: #28639c;
+$toc-color: #65738a;
+$code-bg: #f5f7fa;
+$code-color: #25466a;
+$table-border-color: #e3e9f0;
+$table-cell-padding-y: .65rem;
 $table-cell-padding-x: .8rem;
-$toc-color: #65716a;
+// Quarto otherwise adds 200px to a docked book's body column.
+$grid-docked-body-width: 776px;
 
 /*-- scss:rules --*/
-:root { --book-rule: #e1e6de; --book-muted: #65716a; --book-accent: #176954; }
+:root { --book-rule: #e3e9f0; --book-muted: #65738a; --book-accent: #28639c; }
+html { font-size: 16px; scroll-padding-top: 85px; }
 body { -webkit-font-smoothing: antialiased; }
 a { text-underline-offset: .18em; }
-a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid $primary; outline-offset: 4px; }
-.navbar { border-top: 3px solid $primary; border-bottom: 1px solid $border-color; box-shadow: none; padding-block: .8rem; }
-.navbar, .sidebar, #TOC, .quarto-page-breadcrumbs, .nav-footer, .quarto-other-links, .page-navigation { font-family: $font-family-sans-serif; }
-.navbar-brand { font-size: .85rem; font-weight: 600; letter-spacing: .075em; text-transform: uppercase; white-space: normal; }
-.navbar-nav { font-size: .8rem; }
-.sidebar { font-size: .79rem; line-height: 1.55; }
-#quarto-sidebar { border-right: 1px solid $border-color; padding-right: 1.2rem; }
-.sidebar-title { font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: $secondary; }
-.sidebar-item { padding-block: .25rem; }
-.sidebar-item-text { padding: .3rem .5rem; border-radius: 4px; }
-.sidebar-link.active { background: #edf3ed; font-weight: 600; }
-.sidebar-item-section > .sidebar-item-container > .sidebar-item-text { margin-top: 1rem; font-size: .73rem; color: $body-color; font-weight: 600; }
-.sidebar-item-container .chapter-number { color: inherit; padding-right: .25em; }
-.sidebar-item-text.sidebar-link .chapter-title { overflow-wrap: anywhere; }
-#quarto-search { margin-bottom: 1.5rem; }
-#quarto-search input { font-family: $font-family-sans-serif; }
-.quarto-title-block { margin-bottom: 2.75rem; }
-.quarto-title-block .quarto-title .title, h1.title { font-family: $font-family-serif; font-size: clamp(2.25rem, 3.4vw, 3.25rem); font-weight: 400; letter-spacing: -.035em; line-height: 1.14; margin-top: .4rem; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid $primary; outline-offset: 3px; }
+
+// A single, quiet header leaves the page to the book.
+.navbar { min-height: 62px; border-bottom: 1px solid $border-color; box-shadow: none; padding-block: .45rem; padding-inline: 0; }
+.navbar > .container-fluid { max-width: 1248px; padding-inline: 20px; }
+.navbar-brand { font-family: $font-family-serif; font-weight: 600; font-size: 1.25rem; letter-spacing: -.025em; line-height: 1.35; color: #192b42; }
+.navbar-nav { font-size: .875rem; }
+.navbar .nav-link { padding-inline: .75rem; }
+
+// Navigation is an index, with a similar visual weight to the running text.
+#quarto-sidebar { border-right: 1px solid $border-color; padding: 25px 20px 24px; }
+.sidebar { font-family: $font-family-sans-serif; font-size: .875rem; line-height: 1.45; }
+.sidebar-title { font-size: .8rem; font-weight: 600; color: #23364e; }
+#quarto-search { margin-bottom: 1.25rem; }
+#quarto-search input { font-size: .875rem; }
+.sidebar-item { padding-block: .08rem; }
+.sidebar-item-text { padding: .4rem .6rem; border-radius: 4px; }
+.sidebar-item-container .chapter-number { color: #8290a2; padding-right: .25em; }
+.sidebar-item-section > .sidebar-item-container > .sidebar-item-text { margin-top: .7rem; font-size: .8rem; line-height: 1.45; font-weight: 600; color: #3b506b; }
+.sidebar-item-text.sidebar-link .chapter-title { overflow-wrap: normal; }
+.sidebar-link.active { background: #e9f0f8; color: #225b94; font-weight: 600; }
+.sidebar-link.active .chapter-number { color: inherit; }
+.sidebar-item-container .sidebar-item-toggle { padding-inline: .1rem; }
+
+// Keep prose and mathematics in one bounded reading column.
+#quarto-content { width: 100%; max-width: 1248px; margin-inline: auto; }
+main.content { padding-top: 30px; font-size: 1.0625rem; line-height: 1.65; min-width: 0; width: 100%; max-width: 720px; margin-inline: auto; }
+main.content p { margin-bottom: 1.05rem; }
+main.content > p, main.content section > p { text-wrap: pretty; }
+.quarto-title-block { margin-bottom: 1.65rem; padding-bottom: 1.35rem; border-bottom: 1px solid $border-color; }
+.quarto-title-block .quarto-title .title, h1.title { font-family: $font-family-serif; font-size: 2.25rem; font-weight: 500; letter-spacing: -.035em; line-height: 1.2; margin: 0; text-wrap: balance; }
 h1.title .chapter-number { display: none; }
-.quarto-title .subtitle { font-size: 1.1rem; color: $secondary; line-height: 1.6; }
-.quarto-title-meta { font-family: $font-family-sans-serif; font-size: .75rem; }
-.quarto-title-meta-heading { color: $secondary; }
-.book-chapter-meta { display: flex; gap: .7rem 1rem; align-items: center; flex-wrap: wrap; font: .72rem/1.5 $font-family-sans-serif; color: $secondary; margin-top: 1.3rem; }
-.book-eyebrow { color: $primary; font: 600 .67rem/1.6 $font-family-sans-serif; text-transform: uppercase; letter-spacing: .15em; margin-bottom: 1rem; }
-.book-status { border: 1px solid $border-color; border-radius: 2rem; padding: .22rem .65rem; }
-main.content { padding-top: 2rem; }
-main.content p { margin-bottom: 1.25rem; }
-main.content h2 { font-size: 1.4rem; letter-spacing: -.025em; margin-top: 2.75rem; margin-bottom: 1.1rem; padding-bottom: 0; border-bottom: 0; line-height: 1.35; }
-main.content h3 { font-size: 1.15rem; line-height: 1.45; margin-top: 2rem; }
-#TOC { font-size: .73rem; line-height: 1.65; }
-#toc-title { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 500; }
-.book-callout { border-left: 2px solid $primary; padding: .7rem 1.15rem; margin: 1.8rem 0; }
-.book-callout > p:first-child > strong:first-child { display: block; font: 600 .67rem/1.7 $font-family-sans-serif; text-transform: uppercase; letter-spacing: .11em; color: $primary; margin-bottom: .6rem; }
-.book-callout p { font-size: .96rem; }
+.quarto-title-breadcrumbs { display: none !important; }
+.quarto-title .subtitle { font-size: 1.125rem; line-height: 1.5; color: $secondary; margin-top: 1rem; }
+.quarto-title-meta { font-size: .85rem; margin-top: 1.15rem; }
+.quarto-title-meta:empty { display: none; }
+.quarto-title-meta-heading { color: $secondary; font-size: .7rem; letter-spacing: .05em; }
+.quarto-title-meta-contents p { margin-bottom: 0; }
+.book-eyebrow { color: $primary; font-size: .72rem; font-weight: 600; line-height: 1.4; letter-spacing: .095em; text-transform: uppercase; margin-bottom: .7rem; }
+.book-eyebrow p { margin: 0; }
+.book-chapter-meta { color: $secondary; font-size: .8rem; line-height: 1.4; margin-top: .85rem; }
+.book-chapter-meta p { margin: 0; }
+.book-status { color: #66788c; padding: 0; border: 0; border-radius: 0; }
+main.content h2 { font-size: 1.45rem; letter-spacing: -.018em; line-height: 1.35; font-weight: 600; margin-top: 2.2rem; margin-bottom: .95rem; padding-bottom: 0; border-bottom: 0; text-wrap: pretty; }
+main.content h3 { font-size: 1.18rem; line-height: 1.45; margin-top: 1.75rem; margin-bottom: .75rem; }
+main.content .header-section-number { color: #74869c; font-weight: 400; padding-right: .15em; }
+main.content ul, main.content ol { padding-left: 1.45rem; }
+main.content li > p { margin-bottom: .55rem; }
+
+// The outline stays useful without competing with the text.
+#quarto-margin-sidebar { padding-top: 30px; }
+#TOC { font-family: $font-family-sans-serif; font-size: .8rem; line-height: 1.45; }
+#toc-title { font-size: .74rem; font-weight: 600; color: #3b506b; letter-spacing: .04em; margin-bottom: .8rem; }
+#TOC .nav-link { padding-block: .32rem; padding-left: .8rem; color: #63738a; }
+#TOC .nav-link.active { color: #225b94; border-left-color: #28639c; font-weight: 500; }
+.quarto-other-links { font-size: .8rem; margin-top: 1.5rem; color: $secondary; }
+.quarto-other-links h2 { font-size: .75rem !important; }
+
+// Definitions and research notes are part of the exposition, not small print.
+.book-callout { border-left: 3px solid #7394b7; border-radius: 0 5px 5px 0; padding: 1rem 1.2rem; margin: 1.5rem 0; background: #f5f8fc; font-size: 1rem; line-height: 1.65; }
+.book-callout > p:first-child > strong:first-child { display: block; font-size: .76rem; font-weight: 600; line-height: 1.45; letter-spacing: .04em; color: #3b5e84; margin-bottom: .6rem; }
 .book-callout > :last-child { margin-bottom: 0; }
-.book-research, .book-warning { border-left-color: #a4633d; }
-.book-research > p:first-child > strong:first-child, .book-warning > p:first-child > strong:first-child { color: #97542e; }
-.book-interview, .book-interviewer { border-left-color: #a17d37; }
-.book-definition { border-left-color: #7b887e; }
-.book-definition > p:first-child > strong:first-child { color: #59675e; }
-.math.display { display: block; overflow-x: auto; overflow-y: hidden; max-width: 100%; padding-block: .65rem; margin-block: 1.5rem; }
-.math.inline { font-size: .98em; }
+.book-research, .book-warning { border-left-color: #b3966b; background: #faf8f4; }
+.book-research > p:first-child > strong:first-child, .book-warning > p:first-child > strong:first-child { color: #866739; }
+.book-definition { border-left-color: #8196af; }
+.book-takeaway { border-left-color: #7d9d97; background: #f4f8f7; }
+.book-takeaway > p:first-child > strong:first-child { color: #496f68; }
+
+// MathJax adds its own display margins; do not stack two sets of whitespace.
+.math.display { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; margin: 1.25rem 0; padding: .4rem .15rem; scrollbar-width: thin; }
+.math.display mjx-container[display="true"] { margin: 0 !important; }
+.math.inline { white-space: nowrap; }
 .page-break { display: none; }
-div.sourceCode { border: 1px solid $border-color; border-radius: 5px; }
-pre.sourceCode { padding: 1.1rem; font-size: .8rem; }
-.cell-output { font-family: $font-family-monospace; font-size: .85rem; }
-.table { font-size: .9rem; line-height: 1.65; }
-.table > :not(caption) > * > * { background: transparent; }
-.table thead { font-family: $font-family-sans-serif; font-size: .77rem; }
-.table tbody tr:first-child { font-family: $font-family-sans-serif; }
+
+.table { font-size: .94rem; line-height: 1.5; margin-block: 1.4rem; }
+.table > :not(caption) > * > * { background: transparent; vertical-align: top; }
+.table tbody tr:first-child:has(strong), .table thead { background: #f4f7fb; color: #344a65; font-size: .86rem; }
 div.quarto-float-tbl { max-width: 100%; overflow-x: auto; }
-.roadmap-status { display: inline-block; font: .68rem/1.5 $font-family-sans-serif; color: $secondary; border: 1px solid $border-color; border-radius: 20px; padding: .2rem .65rem; margin: 0 0 .9rem; }
+.book-table-wrap { max-width: 100%; overflow-x: auto; margin-block: 1.4rem; scrollbar-width: thin; }
+.book-table-wrap > .table { margin-block: 0; }
+div.sourceCode { border: 1px solid $border-color; border-radius: 5px; }
+pre.sourceCode { padding: 1rem; font-size: .82rem; }
+.cell-output { font-family: $font-family-monospace; font-size: .85rem; }
+.roadmap-status { display: inline-block; color: #66788c; background: #f0f4f8; font-size: .76rem; line-height: 1.4; border-radius: 4px; padding: .2rem .5rem; margin-bottom: .7rem; }
 .roadmap-status p { margin: 0; }
 .roadmap-status strong { font-weight: 500; }
 .planned-chapter { display: none; }
-.quarto-page-breadcrumbs { font-size: .7rem; }
-.nav-footer { font-size: .73rem; }
-.page-navigation { border-top: 1px solid $border-color; padding-top: 1.2rem; margin-top: 3rem; font-size: .8rem; }
-.qa-chapter-navigation { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; border-top: 1px solid $border-color; padding-top: 1.2rem; margin-top: 3rem; font: .8rem/1.65 $font-family-sans-serif; }
+.quarto-page-breadcrumbs { font-size: .8rem; }
+.nav-footer { width: 100%; max-width: 1248px; margin-inline: auto; padding-inline: 20px; font-size: .8rem; color: #65738a; }
+.page-navigation { border-top: 1px solid $border-color; margin-top: 2.5rem; padding-top: 1.2rem; font-size: .9rem; }
+.qa-chapter-navigation { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; border-top: 1px solid $border-color; padding-top: 1.2rem; margin-top: 2.5rem; font-size: .85rem; }
 .book-nav-next { text-align: right; }
 body:has(.qa-chapter-navigation) .page-navigation { display: none; }
-.quarto-other-links { margin-top: 2rem; }
+
+@media (max-width: 1199px) {
+  #quarto-margin-sidebar { display: none; }
+}
+@media (max-width: 1199px) and (min-width: 992px) {
+  // Give the manuscript room on a laptop. The chapter index stays on the left.
+  #quarto-content > main.content { grid-column: body-content-start / screen-end-inset; }
+}
 @media (max-width: 991px) {
-  main.content { padding-top: 1.4rem; }
-  #quarto-sidebar { border-right: 0; }
-  .navbar-brand { max-width: 75%; font-size: .72rem; }
-  .quarto-title-block { margin-bottom: 2rem; }
+  main.content { padding-top: 24px; }
+  #quarto-content > main.content { grid-column: screen-start / screen-end; max-width: min(720px, calc(100% - 48px)); justify-self: center; }
+  #quarto-sidebar { border-right: 0; max-width: min(320px, calc(100vw - 24px)); }
+  .navbar > .container-fluid { padding-inline: 16px; }
+  .navbar-brand { font-size: 1.15rem; }
+  .quarto-title-block .quarto-title .title, h1.title { font-size: 2rem; }
+  .quarto-title-block { margin-bottom: 1.4rem; }
+  #quarto-sidebar.show { border-bottom: 1px solid $border-color; }
+  .quarto-secondary-nav > .container-fluid { min-height: 44px; align-items: center; }
+  .quarto-secondary-nav .quarto-page-breadcrumbs { flex: 1; min-width: 0; overflow: hidden; }
+  .quarto-secondary-nav .breadcrumb { display: block; width: 100%; margin: 0; }
+  .quarto-secondary-nav > .container-fluid > a.flex-grow-1 { display: none; }
+  .quarto-secondary-nav .breadcrumb-item:not(:last-child) { display: none; }
+  .quarto-secondary-nav .breadcrumb-item:last-child { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 0; }
+  .quarto-secondary-nav .breadcrumb-item + .breadcrumb-item::before { display: none; }
+  .quarto-secondary-nav .quarto-btn-toggle, .quarto-secondary-nav .quarto-search-button { min-height: 44px; }
 }
 @media (max-width: 575px) {
-  body { font-size: 1rem; }
-  main.content h2 { font-size: 1.3rem; }
-  .quarto-title-block .quarto-title .title, h1.title { font-size: 2.3rem; }
-  .book-callout { padding-inline: .9rem; }
-  .table { font-size: .8rem; }
-  .qa-chapter-navigation { gap: .5rem; font-size: .7rem; }
+  .navbar { min-height: 56px; }
+  .navbar-brand { font-size: 1.1rem; }
+  main.content { font-size: 1.025rem; line-height: 1.65; }
+  #quarto-content > main.content { max-width: calc(100% - 40px); }
+  .quarto-title-block .quarto-title .title, h1.title { font-size: 1.85rem; line-height: 1.2; text-wrap: pretty; }
+  .quarto-title .subtitle { font-size: 1rem; }
+  main.content h2 { font-size: 1.3rem; margin-top: 1.9rem; }
+  main.content h3 { font-size: 1.1rem; }
+  .book-callout { padding: .85rem 1rem; font-size: .975rem; }
+  .table { font-size: .85rem; }
+  .qa-chapter-navigation { font-size: .76rem; gap: .65rem; }
 }
 @media print {
   .navbar, #quarto-sidebar, #quarto-margin-sidebar, .nav-footer, .page-navigation { display: none !important; }
