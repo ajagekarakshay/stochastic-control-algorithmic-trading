@@ -113,7 +113,7 @@ main.content li > p { margin-bottom: .55rem; }
 // MathJax adds its own display margins; do not stack two sets of whitespace.
 .math.display { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; margin: 1.25rem 0; padding: .4rem .15rem; scrollbar-width: thin; }
 .math.display mjx-container[display="true"] { margin: 0 !important; }
-.math.inline { white-space: nowrap; }
+.math.inline { display: inline-block; max-width: 100%; white-space: nowrap; }
 .page-break { display: none; }
 
 .table { font-size: .94rem; line-height: 1.5; margin-block: 1.4rem; }
